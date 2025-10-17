@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Marketplace | SkillSwap</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/home.css">
+    <style>
+        .custom{
+            margin: 20px 0px !important;
+        }
+        .active{
+            color: white !important;
+        }
+        .link{
+            color: #4361ee !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container">
+                <a class="navbar-brand logo" href="index.html">Skill<span>Swap</span></a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto nav-links">
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link link" href="home.html">Marketplace</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="dashboard.html">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="messages.html">Messages</a>
+                        </li>
+                    </ul>
+                    <div class="user-menu" id="userMenu">
+                        <div class="notification-bell">
+                            <i class="far fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </div>
+                        <div class="user-avatar">JD</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+<!-- Marketplace Hero -->
+    <section class="marketplace-hero">
+        <div class="container">
+            <h1>Discover Magical Skill Exchanges</h1>
+            <p>Find perfect skill matches and create meaningful exchanges without money. Your next learning adventure awaits!</p>
+            
+            <div class="search-bar">
+                <input type="text" placeholder="Search skills, categories, or users..." id="searchInput">
+                <button onclick="skillSwapApp.handleSearch()"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Marketplace Content -->
+    <div class="container">
+        <div class="marketplace-content">
+            <!-- Filters Sidebar -->
+            <div class="filters-sidebar">
+                <div class="filter-section">
+                    <h3>Categories <span style="color: var(--primary); cursor: pointer;" onclick="skillSwapApp.resetFilters()">Reset</span></h3>
+                    <ul class="filter-options">
+                        <li class="filter-option">
+                            <input type="checkbox" id="tech" checked onchange="skillSwapApp.handleFilter()">
+                            <label for="tech">Technology <span class="skill-count">42</span></label>
+                        </li>
+                        <li class="filter-option">
+                            <input type="checkbox" id="design" onchange="skillSwapApp.handleFilter()">
+                            <label for="design">Design <span class="skill-count">28</span></label>
+                        </li>
+                        <li class="filter-option">
+                            <input type="checkbox" id="business" onchange="skillSwapApp.handleFilter()">
+                            <label for="business">Business <span class="skill-count">19</span></label>
+                        </li>
+                        <li class="filter-option">
+                            <input type="checkbox" id="languages" onchange="skillSwapApp.handleFilter()">
+                            <label for="languages">Languages <span class="skill-count">35</span></label>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="filter-section">
+                    <h3>Skill Tags</h3>
+                    <div class="skill-tags">
+                        <div class="skill-tag" onclick="skillSwapApp.toggleSkillTag(this)">Web Development</div>
+                        <div class="skill-tag" onclick="skillSwapApp.toggleSkillTag(this)">Graphic Design</div>
+                        <div class="skill-tag" onclick="skillSwapApp.toggleSkillTag(this)">Spanish</div>
+                        <div class="skill-tag" onclick="skillSwapApp.toggleSkillTag(this)">Yoga</div>
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <h3>Skill Level</h3>
+                    <ul class="filter-options">
+                        <li class="filter-option">
+                            <input type="radio" id="level-any" name="skill-level" checked onchange="skillSwapApp.handleFilter()">
+                            <label for="level-any">Any Level</label>
+                        </li>
+                        <li class="filter-option">
+                            <input type="radio" id="level-beginner" name="skill-level" onchange="skillSwapApp.handleFilter()">
+                            <label for="level-beginner">Beginner</label>
+                        </li>
+                        <li class="filter-option">
+                            <input type="radio" id="level-intermediate" name="skill-level" onchange="skillSwapApp.handleFilter()">
+                            <label for="level-intermediate">Intermediate</label>
+                        </li>
+                    </ul>
+                </div>
+                
+                <button class="btn btn-primary" style="width: 100%;" onclick="skillSwapApp.applyFilters()">Apply Filters</button>
+            </div>
+            
+            <!-- Skills Grid -->
+            <div class="skills-grid-container">
+                <div class="skills-header">
+                    <h2 id="skillsCount">124 Skills Available</h2>
+                    <div class="view-options">
+                        <div class="view-option active" onclick="skillSwapApp.changeView('grid')"><i class="fas fa-th"></i> Grid</div>
+                        <div class="view-option" onclick="skillSwapApp.changeView('list')"><i class="fas fa-list"></i> List</div>
+                    </div>
+                </div>
+                
+                <div class="skills-grid" id="skillsGrid">
+                    <!-- Skills will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Magic Match Modal -->
+    <div class="modal-overlay" id="magicMatchModal">
+        <div class="modal">
+            <button class="close-modal" onclick="skillSwapApp.closeModal()">&times;</button>
+            
+            <div class="modal-header">
+                <h2>✨ Magic Match Found! ✨</h2>
+                <p>We found a perfect skill exchange opportunity for you!</p>
+            </div>
+            
+            <div class="match-percentage text-center mb-20">
+                <div class="percentage-circle" style="width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(var(--primary) 0% 85%, #e1e5ee 85% 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; position: relative;">
+                    <div style="position: absolute; width: 100px; height: 100px; background: white; border-radius: 50%;"></div>
+                    <div class="percentage-value" style="position: relative; z-index: 1; font-size: 28px; font-weight: bold; color: var(--secondary);">85%</div>
+                </div>
+                <h3>Excellent Match!</h3>
+            </div>
+            
+            <div class="match-details" style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 25px;">
+                <h3 style="font-size: 18px; margin-bottom: 15px; color: var(--secondary);">Why This Match is Perfect:</h3>
+                <ul class="match-reasons" style="list-style: none;">
+                    <li style="display: flex; align-items: center; margin-bottom: 10px;"><i class="fas fa-check-circle" style="color: var(--success); margin-right: 10px;"></i> Your web development skills perfectly match their needs</li>
+                    <li style="display: flex; align-items: center; margin-bottom: 10px;"><i class="fas fa-check-circle" style="color: var(--success); margin-right: 10px;"></i> Their UI/UX design expertise complements your technical skills</li>
+                    <li style="display: flex; align-items: center; margin-bottom: 10px;"><i class="fas fa-check-circle" style="color: var(--success); margin-right: 10px;"></i> Similar availability and preferred learning style</li>
+                </ul>
+            </div>
+            
+            <div class="modal-actions" style="display: flex; gap: 15px;">
+                <button class="btn btn-outline" onclick="skillSwapApp.closeModal()">See Details</button>
+                <button class="btn btn-magic" onclick="skillSwapApp.sendProposal()">Send Exchange Proposal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h3>SkillSwap</h3>
+                    <p>Connecting people through skill exchange. No money, just knowledge sharing.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="home.html">Marketplace</a></li>
+                        <li><a href="#">How It Works</a></li>
+                        <li><a href="#">Success Stories</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h3>Support</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Safety Guidelines</a></li>
+                        <li><a href="#">Community Rules</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright text-center">
+                <p>&copy; 2025 SkillSwap. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./js/data.js"></script>
+    <script src="./js/auth.js"></script>
+    <script src="./js/app.js"></script>
+    <script>
+        // Initialize marketplace when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            skillSwapApp.loadMarketplace();
+        });
+    </script>
+</body>
+</html>
