@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,8 +7,8 @@
     <title>Skill Marketplace | SkillSwap</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="./css/home.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
     <style>
         .custom{
             margin: 20px 0px !important;
@@ -21,58 +22,57 @@
     </style>
 </head>
 <body>
-    <!-- Header -->
+
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
             <div class="container">
-                <a class="navbar-brand logo" href="index.html">Skill<span>Swap</span></a>
+                <a class="navbar-brand logo" href="{% url 'marketplace' %}">Skill<span>Swap</span></a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto nav-links">
                         <li class="nav-item">
-                            <a class="nav-link" href="index.html">Home</a>
+                            <a class="nav-link" href="{% url 'index' %}">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link link" href="home.html">Marketplace</a>
+                            <a class="nav-link link" href="{% url 'marketplace' %}">Marketplace</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="dashboard.html">Dashboard</a>
+                            {% comment %} <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a> {% endcomment %}
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="messages.html">Messages</a>
+                            {% comment %} <a class="nav-link" href="{% url 'messages' %}">Messages</a> {% endcomment %}
                         </li>
                     </ul>
                     <div class="user-menu" id="userMenu">
-                        <div class="notification-bell">
+                        {% comment %} <div class="notification-bell">
                             <i class="far fa-bell"></i>
                             <span class="notification-badge">3</span>
-                        </div>
-                        <div class="user-avatar">JD</div>
+                        </div> {% endcomment %}
+                        <div class="user-avatar" title="{{ user.first_name }}">
+                            {% if user.first_name %}
+                                {{ user.first_name|slice:":1"|upper }}
+                            {% else %}
+                                {{ user.username|slice:":1"|upper }}
+                            {% endif %}
+</div>
                     </div>
                 </div>
             </div>
         </nav>
     </header>
 
-<!-- Marketplace Hero -->
+
     <section class="marketplace-hero">
         <div class="container">
             <h1>Discover Magical Skill Exchanges</h1>
             <p>Find perfect skill matches and create meaningful exchanges without money. Your next learning adventure awaits!</p>
-            
-            <div class="search-bar">
-                <input type="text" placeholder="Search skills, categories, or users..." id="searchInput">
-                <button onclick="skillSwapApp.handleSearch()"><i class="fas fa-search"></i></button>
-            </div>
         </div>
     </section>
 
-    <!-- Marketplace Content -->
     <div class="container">
         <div class="marketplace-content">
-            <!-- Filters Sidebar -->
             <div class="filters-sidebar">
                 <div class="filter-section">
                     <h3>Categories <span style="color: var(--primary); cursor: pointer;" onclick="skillSwapApp.resetFilters()">Reset</span></h3>
@@ -126,25 +126,24 @@
                 
                 <button class="btn btn-primary" style="width: 100%;" onclick="skillSwapApp.applyFilters()">Apply Filters</button>
             </div>
-            
-            <!-- Skills Grid -->
+
             <div class="skills-grid-container">
                 <div class="skills-header">
-                    <h2 id="skillsCount">124 Skills Available</h2>
-                    <div class="view-options">
-                        <div class="view-option active" onclick="skillSwapApp.changeView('grid')"><i class="fas fa-th"></i> Grid</div>
-                        <div class="view-option" onclick="skillSwapApp.changeView('list')"><i class="fas fa-list"></i> List</div>
-                    </div>
+                    <h2 id="skillsCount">Skills Available</h2>
                 </div>
                 
                 <div class="skills-grid" id="skillsGrid">
-                    <!-- Skills will be loaded dynamically -->
+                    {% for skill in skills %}
+                        <div class="skill-card">
+                            <h3>{{ skill.name }}</h3>
+                            <p>{{ skill.description|default:"No description" }}</p>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Magic Match Modal -->
     <div class="modal-overlay" id="magicMatchModal">
         <div class="modal">
             <button class="close-modal" onclick="skillSwapApp.closeModal()">&times;</button>
@@ -178,7 +177,6 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer>
         <div class="container">
             <div class="row">
@@ -212,14 +210,5 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./js/data.js"></script>
-    <script src="./js/auth.js"></script>
-    <script src="./js/app.js"></script>
-    <script>
-        // Initialize marketplace when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            skillSwapApp.loadMarketplace();
-        });
-    </script>
 </body>
 </html>
