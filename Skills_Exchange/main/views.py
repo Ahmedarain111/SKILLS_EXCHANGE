@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login # type: ignore
 from django.contrib.auth.models import User
 from django.contrib import messages
 
-def signup(request):
+def signup_view(request):
     if request.method == "POST":
         username = request.POST.get("fullname")
         username = request.POST.get("email")
@@ -19,7 +19,7 @@ def signup(request):
 
     return render(request, "signup.html")
 
-def login(request):
+def login_view(request):
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -28,9 +28,15 @@ def login(request):
         if user is not None:
             login(request, user)
             messages.success(request, "Logged in successfully!")
-            return redirect("/")
+            return redirect("marketplace")
         else:
             messages.error(request, "Invalid username or password")
 
     return render(request, "login.html")
     
+
+def index_view(request):
+    return render(request, 'index.html')
+
+def marketplace_view(request):
+    return render(request, 'marketplace.html')
