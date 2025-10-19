@@ -46,11 +46,17 @@
                         </li>
                     </ul>
                     <div class="user-menu" id="userMenu">
-                        <div class="notification-bell">
+                        {% comment %} <div class="notification-bell">
                             <i class="far fa-bell"></i>
                             <span class="notification-badge">3</span>
-                        </div>
-                        <div class="user-avatar">JD</div>
+                        </div> {% endcomment %}
+                        <div class="user-avatar" title="{{ user.first_name }}">
+                            {% if user.first_name %}
+                                {{ user.first_name|slice:":1"|upper }}
+                            {% else %}
+                                {{ user.username|slice:":1"|upper }}
+                            {% endif %}
+</div>
                     </div>
                 </div>
             </div>
@@ -124,13 +130,15 @@
             <div class="skills-grid-container">
                 <div class="skills-header">
                     <h2 id="skillsCount">Skills Available</h2>
-                    <div class="view-options">
-                        <div class="view-option active" onclick="skillSwapApp.changeView('grid')"><i class="fas fa-th"></i> Grid</div>
-                        <div class="view-option" onclick="skillSwapApp.changeView('list')"><i class="fas fa-list"></i> List</div>
-                    </div>
                 </div>
                 
                 <div class="skills-grid" id="skillsGrid">
+                    {% for skill in skills %}
+                        <div class="skill-card">
+                            <h3>{{ skill.name }}</h3>
+                            <p>{{ skill.description|default:"No description" }}</p>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>

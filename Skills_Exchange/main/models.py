@@ -22,4 +22,4 @@ class UserSkill(models.Model):
     bio = models.TextField(blank=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.skill.name} ({self.get_role_display()})"
+        return f"{self.user.username} - {self.skill.name} ({self.get_role_display()})" # type: ignore

@@ -1,12 +1,10 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login  # type: ignore
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
+from .models import Skill
 
-
-from django.contrib.auth.models import User
-from django.contrib import messages
-from django.shortcuts import render, redirect
 
 def signup_view(request):
     if request.method == "POST":
@@ -38,11 +36,6 @@ def signup_view(request):
     return render(request, "signup.html")
 
 
-
-from django.contrib.auth import authenticate, login
-from django.contrib import messages
-from django.shortcuts import render, redirect
-
 def login_view(request):
     if request.method == "POST":
         email = request.POST.get("username")
@@ -64,5 +57,7 @@ def index_view(request):
     return render(request, "index.html")
 
 
+@login_required(login_url="login")
 def marketplace_view(request):
-    return render(request, "marketplace.html")
+    skills = Skill.objects.all()
+    return render(request, "marketplace.html", {"skills": skills})
