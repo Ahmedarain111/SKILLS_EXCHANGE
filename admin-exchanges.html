@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Exchanges | SkillSwap Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 100px auto 40px;
+            padding: 0 20px;
+        }
+        
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .exchange-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--gray-light);
+            background: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .exchanges-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .exchange-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .exchange-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .exchange-id {
+            font-weight: 600;
+            color: var(--gray-medium);
+        }
+        
+        .exchange-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background: rgba(75, 181, 67, 0.1);
+            color: var(--success);
+        }
+        
+        .status-pending {
+            background: rgba(255, 158, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-dispute {
+            background: rgba(230, 57, 70, 0.1);
+            color: var(--error);
+        }
+        
+        .status-completed {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+        }
+        
+        .exchange-details {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 30px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .exchange-party {
+            text-align: center;
+        }
+        
+        .party-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            justify-content: center;
+        }
+        
+        .exchange-arrow {
+            font-size: 24px;
+            color: var(--primary);
+        }
+        
+        .exchange-tasks {
+            background: var(--light);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .task-item:last-child {
+            border-bottom: none;
+        }
+        
+        .task-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .exchange-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 768px) {
+            .exchange-details {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .exchange-arrow {
+                transform: rotate(90deg);
+            }
+            
+            .exchange-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+        .active{
+            color: white !important;
+        }
+        .links{
+            color:#4361ee !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container">
+                <a class="navbar-brand logo" href="index.html">Skill<span>Swap</span></a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto nav-links">
+                        <li class="nav-item">
+                            <a class="nav-link" href="admin.html">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="admin-users.html">Users</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link links" href="admin-exchanges.html">Exchanges</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="admin-reports.html">Reports</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="dashboard.html">User View</a>
+                        </li>
+                    </ul>
+                    <div class="user-menu">
+                        <div class="user-avatar">SA</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>Exchange Management</h1>
+            <div class="admin-actions">
+                <button class="btn btn-outline" onclick="refreshExchanges()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+        </div>
+        
+        <div class="exchange-filters">
+            <button class="filter-btn active" data-status="all">All Exchanges</button>
+            <button class="filter-btn" data-status="active">Active</button>
+            <button class="filter-btn" data-status="pending">Pending</button>
+            <button class="filter-btn" data-status="dispute">Disputes</button>
+            <button class="filter-btn" data-status="completed">Completed</button>
+        </div>
+        
+        <div class="exchanges-grid" id="exchangesList">
+            <!-- Exchanges will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Resolve Dispute Modal -->
+    <div class="modal-overlay" id="resolveModal">
+        <div class="modal">
+            <button class="close-modal" onclick="closeResolveModal()">&times;</button>
+            <div class="modal-header">
+                <h2>Resolve Exchange Dispute</h2>
+                <p>Provide a resolution for this exchange</p>
+            </div>
+            <div class="form-content">
+                <div class="mb-3">
+                    <label for="resolutionDetails" class="form-label">Resolution Details</label>
+                    <textarea id="resolutionDetails" class="form-control" placeholder="Describe the resolution and any actions taken..." rows="4"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="resolutionAction" class="form-label">Action</label>
+                    <select id="resolutionAction" class="form-control">
+                        <option value="complete">Mark as Completed</option>
+                        <option value="cancel">Cancel Exchange</option>
+                        <option value="hold">Place on Hold</option>
+                        <option value="refund">Process Refund</option>
+                    </select>
+                </div>
+                <div class="form-actions d-flex gap-2">
+                    <button class="btn btn-outline flex-fill" onclick="closeResolveModal()">Cancel</button>
+                    <button class="btn btn-primary flex-fill" onclick="submitResolution()">Submit Resolution</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h3>SkillSwap</h3>
+                    <p>Connecting people through skill exchange. No money, just knowledge sharing.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="home.html">Marketplace</a></li>
+                        <li><a href="#">How It Works</a></li>
+                        <li><a href="#">Success Stories</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h3>Support</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Safety Guidelines</a></li>
+                        <li><a href="#">Community Rules</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright text-center">
+                <p>&copy; 2025 SkillSwap. All rights reserved. | Admin Panel</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let allExchanges = [];
+        let currentFilter = 'all';
+        let currentExchangeId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is admin
+            const user = JSON.parse(localStorage.getItem('skillswap_user'));
+            
+            if (!user || user.role !== 'admin') {
+                alert('Access denied. Admin privileges required.');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            loadExchanges();
+            setupEventListeners();
+            
+            // Mobile menu toggle
+            document.getElementById('mobileMenuToggle').addEventListener('click', function() {
+                document.getElementById('navLinks').classList.toggle('active');
+            });
+        });
+        
+        function setupEventListeners() {
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    currentFilter = this.getAttribute('data-status');
+                    filterExchanges();
+                });
+            });
+            
+            // Close modal when clicking outside
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal-overlay')) {
+                    closeResolveModal();
+                }
+            });
+        }
+        
+        function loadExchanges() {
+            allExchanges = AuthSystem.getAllExchanges();
+            filterExchanges();
+        }
+        
+        function filterExchanges() {
+            let filteredExchanges = allExchanges;
+            
+            if (currentFilter !== 'all') {
+                filteredExchanges = allExchanges.filter(exchange => exchange.status === currentFilter);
+            }
+            
+            renderExchanges(filteredExchanges);
+        }
+        
+        function renderExchanges(exchanges) {
+            const exchangesList = document.getElementById('exchangesList');
+            
+            if (exchanges.length === 0) {
+                exchangesList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--gray-medium);">
+                        <i class="fas fa-exchange-alt" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                        <h3>No exchanges found</h3>
+                        <p>No exchanges match the current filter criteria.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            exchangesList.innerHTML = exchanges.map(exchange => `
+                <div class="exchange-card">
+                    <div class="exchange-header">
+                        <h3>${exchange.skill1} ↔ ${exchange.skill2}</h3>
+                        <div>
+                            <span class="exchange-id">#${exchange.id}</span>
+                            <span class="exchange-status status-${exchange.status}">${exchange.status.charAt(0).toUpperCase() + exchange.status.slice(1)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="exchange-details">
+                        <div class="exchange-party">
+                            <div class="party-info">
+                                <div class="user-avatar-small">${exchange.user1.avatar}</div>
+                                <div>
+                                    <h4>${exchange.user1.name}</h4>
+                                    <p>Provides: ${exchange.skill1}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="exchange-arrow">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        
+                        <div class="exchange-party">
+                            <div class="party-info">
+                                <div class="user-avatar-small">${exchange.user2.avatar}</div>
+                                <div>
+                                    <h4>${exchange.user2.name}</h4>
+                                    <p>Provides: ${exchange.skill2}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="exchange-tasks">
+                        <h4>Task Progress</h4>
+                        ${exchange.tasks.map(task => `
+                            <div class="task-item">
+                                <span>${task.user === exchange.user1.id ? exchange.user1.name : exchange.user2.name}: ${task.task}</span>
+                                <span class="task-status status-${task.status.replace('-', '')}">${task.status.replace('-', ' ')}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="exchange-meta">
+                        <p><strong>Started:</strong> ${new Date(exchange.startDate).toLocaleDateString()}</p>
+                        ${exchange.messages && exchange.messages.length > 0 ? 
+                            `<p><strong>Messages:</strong> ${exchange.messages.length} total</p>` : ''}
+                    </div>
+                    
+                    <div class="exchange-actions">
+                        <button class="btn btn-outline" onclick="viewExchange('${exchange.id}')">
+                            <i class="fas fa-eye"></i> View Details
+                        </button>
+                        ${exchange.status === 'dispute' ? `
+                            <button class="btn btn-primary" onclick="openResolveModal('${exchange.id}')">
+                                <i class="fas fa-gavel"></i> Resolve
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-outline" onclick="contactParties('${exchange.id}')">
+                            <i class="fas fa-envelope"></i> Contact
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function refreshExchanges() {
+            loadExchanges();
+            alert('Exchanges refreshed!');
+        }
+        
+        function viewExchange(exchangeId) {
+            const exchange = AuthSystem.getExchangeById(exchangeId);
+            if (exchange) {
+                alert(`Exchange Details:\n\nID: ${exchange.id}\nStatus: ${exchange.status}\nParties: ${exchange.user1.name} & ${exchange.user2.name}\nSkills: ${exchange.skill1} ↔ ${exchange.skill2}\nStart Date: ${new Date(exchange.startDate).toLocaleDateString()}`);
+            }
+        }
+        
+        function openResolveModal(exchangeId) {
+            currentExchangeId = exchangeId;
+            document.getElementById('resolveModal').classList.add('active');
+        }
+        
+        function closeResolveModal() {
+            document.getElementById('resolveModal').classList.remove('active');
+            currentExchangeId = null;
+            document.getElementById('resolutionDetails').value = '';
+            document.getElementById('resolutionAction').value = 'complete';
+        }
+        
+        function submitResolution() {
+            const details = document.getElementById('resolutionDetails').value;
+            const action = document.getElementById('resolutionAction').value;
+            
+            if (!details) {
+                alert('Please provide resolution details');
+                return;
+            }
+            
+            if (AuthSystem.resolveExchange(currentExchangeId, {
+                details,
+                action,
+                resolvedBy: AuthSystem.getCurrentUser().id,
+                resolvedAt: new Date().toISOString()
+            })) {
+                closeResolveModal();
+                loadExchanges();
+                alert('Exchange resolved successfully!');
+            }
+        }
+        
+        function contactParties(exchangeId) {
+            const exchange = AuthSystem.getExchangeById(exchangeId);
+            if (exchange) {
+                const message = prompt('Enter message to send to both parties:');
+                if (message) {
+                    alert(`Message sent to ${exchange.user1.name} and ${exchange.user2.name}:\n\n"${message}"`);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
