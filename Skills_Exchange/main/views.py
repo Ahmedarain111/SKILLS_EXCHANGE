@@ -78,3 +78,11 @@ def admin_dashboard(request):
     }
     return render(request, "admin_dashboard.html", context)
 
+@staff_member_required
+def admin_users(request):
+    query = request.GET.get('q', '')
+    if query:
+        users = User.objects.filter(username__icontains=query)
+    else:
+        users = User.objects.all()
+    return render(request, 'admin_users.html', {'users': users})
