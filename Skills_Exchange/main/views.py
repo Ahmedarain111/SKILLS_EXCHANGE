@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-from .models import Skill
+from .models import Skill, Exchange
 
 
 def signup_view(request):
@@ -86,3 +86,10 @@ def admin_users(request):
     else:
         users = User.objects.all()
     return render(request, 'admin_users.html', {'users': users})
+
+
+
+
+def admin_exchanges(request):
+    exchanges = Exchange.objects.all()
+    return render(request, 'admin_exchanges.html', {'exchanges': exchanges})
