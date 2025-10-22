@@ -3,7 +3,8 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Skill
+from django.contrib.admin.views.decorators import staff_member_required
+from .models import Skill, Exchange
 
 
 def signup_view(request):
@@ -61,3 +62,34 @@ def index_view(request):
 def marketplace_view(request):
     skills = Skill.objects.all()
     return render(request, "marketplace.html", {"skills": skills})
+
+
+@staff_member_required
+def admin_dashboard(request):
+    total_users = User.objects.count()
+    recent_users = User.objects.order_by('-date_joined')[:5]
+
+    context = {
+        "total_users": total_users,
+        "active_exchanges": 0,
+        "pending_issues": 0,
+        "completed_exchanges": 0,
+        "recent_users": recent_users,
+    }
+    return render(request, "admin_dashboard.html", context)
+
+@staff_member_required
+def admin_users(request):
+    query = request.GET.get('q', '')
+    if query:
+        users = User.objects.filter(username__icontains=query)
+    else:
+        users = User.objects.all()
+    return render(request, 'admin_users.html', {'users': users})
+
+
+
+
+def admin_exchanges(request):
+    exchanges = Exchange.objects.all()
+    return render(request, 'admin_exchanges.html', {'exchanges': exchanges})
