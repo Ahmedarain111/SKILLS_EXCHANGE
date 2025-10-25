@@ -10,4 +10,5 @@ urlpatterns = [
     path("admin-users/", views.admin_users, name="admin_users"),
     path('admin-exchanges/', views.admin_exchanges, name='admin_exchanges'),
     path('profile/', views.create_profile, name='create_profile'),
+    path('dashboard/', views.dashboard_view, name="dashboard"),
 ]

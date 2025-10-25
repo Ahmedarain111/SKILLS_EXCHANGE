@@ -8,6 +8,7 @@ from .models import Skill, Exchange
 from .forms import UserProfileForm
 from .models import UserProfile
 from .models import UserProfile, Skill, UserSkill
+from django.db.models import Q
 
 
 def signup_view(request):
@@ -132,3 +133,86 @@ def create_profile(request):
         form = UserProfileForm(instance=profile)
 
     return render(request, "profile.html", {"form": form})
+
+
+@login_required
+def dashboard_view(request):
+    user = request.user
+    
+    profile = UserProfile.objects.filter(user=user).first()
+
+    skills_have_count = UserSkill.objects.filter(user=user, skill_type="teach").count()
+    skills_want_count = UserSkill.objects.filter(user=user, skill_type="learn").count()
+    active_exchanges_count = Exchange.objects.filter(
+        Q(user1=user) | Q(user2=user), status="active"
+    ).count()
+
+    if profile:
+        fields = [profile.full_name, profile.bio, profile.location]
+        completion_fields = sum(bool(f) for f in fields)
+        total_fields = len(fields)
+        profile_completion = int((completion_fields / total_fields) * 100)
+    else:
+        profile_completion = 0
+
+    recent_exchanges = Exchange.objects.filter(Q(user1=user) | Q(user2=user)).order_by(
+        "-start_date"
+    )[:5]
+
+    recent_activity = []
+    for ex in recent_exchanges:
+        partner = ex.user2 if ex.user1 == user else ex.user1
+        skill_you_give = ex.skill1 if ex.user1 == user else ex.skill2
+        skill_you_get = ex.skill2 if ex.user1 == user else ex.skill1
+        recent_activity.append(
+            {
+                "icon": "fas fa-handshake",
+                "title": (
+                    "Exchange Started"
+                    if ex.status == "active"
+                    else ex.get_status_display()
+                ),
+                "desc": f"With {partner.username}: {skill_you_give} ↔ {skill_you_get}",
+                "time": ex.start_date.strftime("%b %d, %Y"),
+            }
+        )
+
+    your_teach_skills = UserSkill.objects.filter(
+        user=user, skill_type="teach"
+    ).values_list("skill", flat=True)
+    your_learn_skills = UserSkill.objects.filter(
+        user=user, skill_type="learn"
+    ).values_list("skill", flat=True)
+
+    matches = []
+    if your_teach_skills.exists() or your_learn_skills.exists():
+        potential_users = (
+            UserSkill.objects.exclude(user=user)
+            .filter(
+                Q(skill__in=your_learn_skills, skill_type="teach")
+                | Q(skill__in=your_teach_skills, skill_type="learn")
+            )
+            .select_related("user", "skill")
+            .distinct()[:4]
+        )
+
+        for us in potential_users:
+            matches.append(
+                {
+                    "initials": us.user.username[:2].upper(),
+                    "name": us.user.get_full_name() or us.user.username,
+                    "exchange": f"{us.skill.name}",
+                }
+            )
+
+    context = {
+        "profile": profile,
+        "skills_have_count": skills_have_count,
+        "skills_want_count": skills_want_count,
+        "active_exchanges_count": active_exchanges_count,
+        "profile_completion": profile_completion,
+        "recent_activity": recent_activity,
+        "matches": matches,
+    }
+
+    return render(request, "dashboard.html", context)
