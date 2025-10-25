@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -138,7 +138,7 @@ def create_profile(request):
 @login_required
 def dashboard_view(request):
     user = request.user
-    
+
     profile = UserProfile.objects.filter(user=user).first()
 
     skills_have_count = UserSkill.objects.filter(user=user, skill_type="teach").count()
@@ -216,3 +216,32 @@ def dashboard_view(request):
     }
 
     return render(request, "dashboard.html", context)
+
+
+@login_required
+def start_exchange(request, user_id, skill_id):
+    """Initiate an exchange with another user."""
+    other_user_skill = get_object_or_404(UserSkill, id=skill_id, user_id=user_id)
+    current_user = request.user
+
+    teach_skill = UserSkill.objects.filter(
+        user=current_user, skill_type="teach"
+    ).first()
+    if not teach_skill:
+        messages.error(
+            request, "You must add a teaching skill before starting an exchange."
+        )
+        return redirect("dashboard")
+
+    exchange = Exchange.objects.create(
+        user1=current_user,
+        user2=other_user_skill.user,
+        skill1=teach_skill.skill,
+        skill2=other_user_skill.skill,
+        status="pending",
+    )
+
+    messages.success(
+        request, f"Exchange request sent to {other_user_skill.user.username}!"
+    )
+    return redirect("dashboard")

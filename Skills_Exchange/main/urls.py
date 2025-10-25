@@ -11,4 +11,5 @@ urlpatterns = [
     path('admin-exchanges/', views.admin_exchanges, name='admin_exchanges'),
     path('profile/', views.create_profile, name='create_profile'),
     path('dashboard/', views.dashboard_view, name="dashboard"),
+    path('exchange/start/<int:user_id>/<int:skill_id>/', views.start_exchange, name='start_exchange'),
 ]
