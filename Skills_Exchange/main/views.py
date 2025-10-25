@@ -5,6 +5,9 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from .models import Skill, Exchange
+from .forms import UserProfileForm
+from .models import UserProfile
+from .models import UserProfile, Skill, UserSkill
 
 
 def signup_view(request):
@@ -27,7 +30,9 @@ def signup_view(request):
             email=email,
             password=password,
             first_name=name.split(" ")[0] if name else "",
-            last_name=" ".join(name.split(" ")[1:]) if name and len(name.split()) > 1 else ""
+            last_name=(
+                " ".join(name.split(" ")[1:]) if name and len(name.split()) > 1 else ""
+            ),
         )
         user.save()
 
@@ -67,7 +72,7 @@ def marketplace_view(request):
 @staff_member_required
 def admin_dashboard(request):
     total_users = User.objects.count()
-    recent_users = User.objects.order_by('-date_joined')[:5]
+    recent_users = User.objects.order_by("-date_joined")[:5]
 
     context = {
         "total_users": total_users,
@@ -78,18 +83,52 @@ def admin_dashboard(request):
     }
     return render(request, "admin_dashboard.html", context)
 
+
 @staff_member_required
 def admin_users(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get("q", "")
     if query:
         users = User.objects.filter(username__icontains=query)
     else:
         users = User.objects.all()
-    return render(request, 'admin_users.html', {'users': users})
-
-
+    return render(request, "admin_users.html", {"users": users})
 
 
 def admin_exchanges(request):
     exchanges = Exchange.objects.all()
-    return render(request, 'admin_exchanges.html', {'exchanges': exchanges})
+    return render(request, "admin_exchanges.html", {"exchanges": exchanges})
+
+
+@login_required
+def create_profile(request):
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        profile = None
+
+    if request.method == "POST":
+        form = UserProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            user_profile = form.save(commit=False)
+            user_profile.user = request.user
+            user_profile.save()
+
+            # Clear previous skills
+            UserSkill.objects.filter(user=request.user).delete()
+
+            # Save new selected skills
+            for skill in form.cleaned_data["skills_have"]:
+                UserSkill.objects.create(
+                    user=request.user, skill=skill, skill_type="teach"
+                )
+            for skill in form.cleaned_data["skills_want"]:
+                UserSkill.objects.create(
+                    user=request.user, skill=skill, skill_type="learn"
+                )
+
+            messages.success(request, "Profile and skills saved successfully!")
+            return redirect("dashboard")
+    else:
+        form = UserProfileForm(instance=profile)
+
+    return render(request, "profile.html", {"form": form})
