@@ -114,10 +114,8 @@ def create_profile(request):
             user_profile.user = request.user
             user_profile.save()
 
-            # Clear previous skills
             UserSkill.objects.filter(user=request.user).delete()
 
-            # Save new selected skills
             for skill in form.cleaned_data["skills_have"]:
                 UserSkill.objects.create(
                     user=request.user, skill=skill, skill_type="teach"

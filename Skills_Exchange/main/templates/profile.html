@@ -56,7 +56,6 @@
         </div>
 
         <div class="profile-creator d-flex flex-wrap justify-content-center">
-            <!-- Sidebar -->
             <div class="progress-sidebar me-4 mb-4">
                 <h2>Profile Progress</h2>
                 <ul class="progress-steps list-unstyled">
@@ -78,12 +77,10 @@
                 </ul>
             </div>
 
-            <!-- Form Container -->
             <div class="form-container flex-grow-1" style="max-width: 700px;">
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
 
-                    <!-- Step 1 -->
                     <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="form-section active" id="step-1">
@@ -155,7 +152,6 @@
     </div>
 </form>
 
-                    <!-- Step 4 -->
                     <div class="form-section" id="step-4">
                         <h2>Certifications</h2>
                         <input type="file" class="form-control mb-3">
@@ -165,7 +161,6 @@
                         </div>
                     </div>
 
-                    <!-- Step 5 -->
                     <div class="form-section" id="step-5">
                         <h2>Preview & Complete</h2>
                         <p>Review your information and finish your profile.</p>

@@ -182,7 +182,7 @@
     </style>
     </head>
     <body>
-        <!-- Header -->
+
         <header>
             <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
                 <div class="container">
@@ -227,7 +227,7 @@
                     </button>
                 </div>
             </div>
-            <!-- Filters -->
+            
             <div class="exchange-filters">
                 <button class="filter-btn active" data-status="all">All Exchanges</button>
                 <button class="filter-btn" data-status="active">Active</button>
@@ -235,7 +235,7 @@
                 <button class="filter-btn" data-status="dispute">Disputes</button>
                 <button class="filter-btn" data-status="completed">Completed</button>
             </div>
-            <!-- Dynamic Exchange Grid -->
+            
             <div class="exchanges-grid" id="exchangesList">
                 {% if exchanges %}
                     {% for exchange in exchanges %}
