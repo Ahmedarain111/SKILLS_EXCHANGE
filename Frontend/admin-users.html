@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users | SkillSwap Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <style>
+        .admin-container {
+    max-width: 1400px;
+    margin: 100px auto 40px;
+    padding: 0 20px;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.search-bar {
+    max-width: 400px;
+    margin: 20px 0;
+}
+
+.users-table {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr 1fr 1fr 1fr 1fr;
+    gap: 15px;
+    padding: 20px;
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+}
+
+.user-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr 1fr 1fr 1fr 1fr;
+    gap: 15px;
+    padding: 20px;
+    border-bottom: 1px solid var(--gray-light);
+    align-items: center;
+}
+
+.user-row:hover {
+    background: var(--light);
+}
+
+.user-row:last-child {
+    border-bottom: none;
+}
+
+.user-avatar-admin {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.user-email {
+    color: var(--gray-medium);
+    font-size: 14px;
+}
+
+.user-role {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.role-admin {
+    background: rgba(181, 23, 158, 0.1);
+    color: var(--magic);
+}
+
+.role-user {
+    background: rgba(67, 97, 238, 0.1);
+    color: var(--primary);
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.status-active {
+    background: rgba(75, 181, 67, 0.1);
+    color: var(--success);
+}
+
+.status-inactive {
+    background: rgba(108, 117, 125, 0.1);
+    color: var(--gray-medium);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-sm {
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+/* Tablet - 1024px */
+@media (max-width: 1024px) {
+    .table-header,
+    .user-row {
+        grid-template-columns: 1fr 2fr 2fr 1fr 1fr;
+        gap: 12px;
+        padding: 18px;
+    }
+
+    .user-join-date, .user-status,
+    .user-exchanges {
+        display: none;
+    }
+    
+    /* Hide the header for join date */
+    .table-header div:nth-child(6), .table-header div:nth-child(5) {
+        display: none;
+    }
+}
+
+/* Mobile - 768px */
+@media (max-width: 768px) {
+    .admin-container {
+        margin: 80px auto 20px;
+        padding: 0 15px;
+    }
+
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        gap: 15px;
+    }
+
+    .search-bar {
+        max-width: 100%;
+        width: 100%;
+        margin: 0;
+    }
+
+    .users-table {
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .table-header,
+    .user-row {
+        /* 3 columns: Avatar | User Info | Actions */
+        grid-template-columns: 50px 1fr auto;
+        gap: 12px;
+        padding: 15px;
+    }
+
+    /* Hide headers for removed columns */
+    .table-header div:nth-child(3), /* Email */
+    .table-header div:nth-child(4), /* Role */
+    .table-header div:nth-child(5), /* Status */
+    .table-header div:nth-child(6) { /* Keep this for proper header alignment */
+        display: none;
+    }
+
+    /* Hide the corresponding data cells */
+    .user-email,
+    .user-role,
+    .user-status,
+    .user-join-date {
+        display: none;
+    }
+
+    /* Avatar column */
+    .user-avatar-admin {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
+
+    /* User Info column */
+    .user-info {
+        min-width: 0;
+        padding-right: 10px;
+    }
+
+    .user-name {
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 2px;
+    }
+
+    /* Hide the email inside user-info */
+    .user-info .user-email {
+        display: none;
+    }
+
+    /* Actions column */
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        flex-direction: row; /* Keep horizontal on mobile */
+    }
+
+    .btn-sm {
+        padding: 8px 10px;
+        font-size: 12px;
+        min-width: 36px;
+    }
+
+    /* Better touch targets */
+    .btn-sm i {
+        margin: 0;
+    }
+}
+
+/* Small Mobile - 480px */
+@media (max-width: 480px) {
+    .admin-container {
+        margin: 70px auto 15px;
+        padding: 0 12px;
+    }
+
+    .admin-header {
+        margin-bottom: 15px;
+        gap: 12px;
+    }
+
+    .admin-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .users-table {
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+
+    .table-header,
+    .user-row {
+        grid-template-columns: 40px 1fr auto;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .user-avatar-admin {
+        width: 35px;
+        height: 35px;
+        font-size: 13px;
+    }
+
+    .user-info {
+        padding-right: 8px;
+    }
+
+    .user-name {
+        font-size: 13px;
+    }
+
+    .action-buttons {
+        gap: 4px;
+    }
+
+    .btn-sm {
+        padding: 6px 8px;
+        font-size: 11px;
+        min-width: 32px;
+    }
+
+    /* Header buttons stack on very small screens */
+    .admin-header .d-flex {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .admin-header .btn {
+        width: 100%;
+    }
+}
+
+/* Extra Small Mobile - 360px */
+@media (max-width: 360px) {
+    .admin-container {
+        margin: 60px auto 10px;
+        padding: 0 10px;
+    }
+
+    .table-header,
+    .user-row {
+        grid-template-columns: 35px 1fr auto;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .user-avatar-admin {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+
+    .user-name {
+        font-size: 12px;
+    }
+
+    .action-buttons {
+        gap: 3px;
+    }
+
+    .btn-sm {
+        padding: 5px 6px;
+        font-size: 10px;
+        min-width: 28px;
+    }
+}
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container">
+                <a class="navbar-brand logo" href="index.html">Skill<span>Swap</span></a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto nav-links">
+                        <li class="nav-item">
+                            <a class="nav-link" href="admin.html">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="admin-users.html">Users</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="admin-exchanges.html">Exchanges</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="admin-reports.html">Reports</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="dashboard.html">User View</a>
+                        </li>
+                    </ul>
+                    <div class="user-menu">
+                        <div class="user-avatar">SA</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>User Management</h1>
+            <div class="d-flex flex-column flex-md-row gap-3 align-items-start align-items-md-center">
+                <div class="search-bar">
+                    <input type="text" id="userSearch" placeholder="Search users..." class="form-control">
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" onclick="showAddUserModal()">
+                        <i class="fas fa-plus"></i> Add User
+                    </button>
+                    <button class="btn btn-outline" onclick="exportUsers()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="users-table">
+            <div class="table-header">
+                <div>Avatar</div>
+                <div>User Info</div>
+                <div>Email</div>
+                <div>Role</div>
+                <div>Status</div>
+                <div>Join Date</div>
+                <div>Actions</div>
+            </div>
+
+            <div id="usersList">
+                <!-- Users will be loaded here -->
+            </div>
+        </div>
+
+        <div class="pagination" id="pagination">
+            <!-- Pagination will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal-overlay" id="addUserModal">
+        <div class="modal">
+            <button class="close-modal" onclick="closeAddUserModal()">&times;</button>
+            <div class="modal-header">
+                <h2>Add New User</h2>
+                <p>Create a new user account</p>
+            </div>
+            <div class="form-content">
+                <div class="mb-3">
+                    <label for="newUserName" class="form-label">Full Name</label>
+                    <input type="text" id="newUserName" class="form-control" placeholder="Enter full name">
+                </div>
+                <div class="mb-3">
+                    <label for="newUserEmail" class="form-label">Email Address</label>
+                    <input type="email" id="newUserEmail" class="form-control" placeholder="Enter email address">
+                </div>
+                <div class="mb-3">
+                    <label for="newUserPassword" class="form-label">Password</label>
+                    <input type="password" id="newUserPassword" class="form-control" placeholder="Enter password">
+                </div>
+                <div class="mb-3">
+                    <label for="newUserRole" class="form-label">Role</label>
+                    <select id="newUserRole" class="form-control">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-actions d-flex gap-2">
+                    <button class="btn btn-outline flex-fill" onclick="closeAddUserModal()">Cancel</button>
+                    <button class="btn btn-primary flex-fill" onclick="createNewUser()">Create User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h3>SkillSwap</h3>
+                    <p>Connecting people through skill exchange. No money, just knowledge sharing.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="home.html">Marketplace</a></li>
+                        <li><a href="#">How It Works</a></li>
+                        <li><a href="#">Success Stories</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h3>Support</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Safety Guidelines</a></li>
+                        <li><a href="#">Community Rules</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright text-center">
+                <p>&copy; 2025 SkillSwap. All rights reserved. | Admin Panel</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let currentPage = 1;
+        const usersPerPage = 10;
+        let allUsers = [];
+        let filteredUsers = [];
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check if user is admin
+            const user = JSON.parse(localStorage.getItem('skillswap_user'));
+
+            if (!user || user.role !== 'admin') {
+                alert('Access denied. Admin privileges required.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            loadUsers();
+            setupEventListeners();
+
+            // Mobile menu toggle
+            document.getElementById('mobileMenuToggle').addEventListener('click', function () {
+                document.getElementById('navLinks').classList.toggle('active');
+            });
+        });
+
+        function setupEventListeners() {
+            // Search functionality
+            document.getElementById('userSearch').addEventListener('input', function (e) {
+                filterUsers(e.target.value);
+            });
+
+            // Close modal when clicking outside
+            document.addEventListener('click', function (e) {
+                if (e.target.classList.contains('modal-overlay')) {
+                    closeAddUserModal();
+                }
+            });
+        }
+
+        function loadUsers() {
+            allUsers = AuthSystem.getAllUsers();
+            filteredUsers = [...allUsers];
+            renderUsers();
+            renderPagination();
+        }
+
+        function filterUsers(searchTerm) {
+            if (!searchTerm) {
+                filteredUsers = [...allUsers];
+            } else {
+                filteredUsers = allUsers.filter(user =>
+                    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }
+            currentPage = 1;
+            renderUsers();
+            renderPagination();
+        }
+
+        function renderUsers() {
+            const startIndex = (currentPage - 1) * usersPerPage;
+            const endIndex = startIndex + usersPerPage;
+            const usersToShow = filteredUsers.slice(startIndex, endIndex);
+
+            const usersList = document.getElementById('usersList');
+
+            usersList.innerHTML = usersToShow.map(user => `
+                <div class="user-row">
+                    <div class="user-avatar-admin">${user.avatar}</div>
+                    <div class="user-info">
+                        <div class="user-name">${user.name}</div>
+                        <div class="user-email">${user.email}</div>
+                    </div>
+                    <div class="user-email">${user.email}</div>
+                    <div class="user-role ${user.role === 'admin' ? 'role-admin' : 'role-user'}">
+                        ${user.role}
+                    </div>
+                    <div class="user-status status-active">Active</div>
+                    <div class="user-join-date">${new Date(user.joinDate).toLocaleDateString()}</div>
+                    <div class="action-buttons">
+                        <button class="btn btn-outline btn-sm" onclick="viewUser('${user.id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="editUser('${user.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        ${user.role !== 'admin' ? `
+                            <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+            const pagination = document.getElementById('pagination');
+
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let paginationHTML = '';
+
+            // Previous button
+            if (currentPage > 1) {
+                paginationHTML += `<button class="page-btn" onclick="changePage(${currentPage - 1})">Previous</button>`;
+            }
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === currentPage) {
+                    paginationHTML += `<button class="page-btn active">${i}</button>`;
+                } else {
+                    paginationHTML += `<button class="page-btn" onclick="changePage(${i})">${i}</button>`;
+                }
+            }
+
+            // Next button
+            if (currentPage < totalPages) {
+                paginationHTML += `<button class="page-btn" onclick="changePage(${currentPage + 1})">Next</button>`;
+            }
+
+            pagination.innerHTML = paginationHTML;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            renderUsers();
+            renderPagination();
+        }
+
+        function showAddUserModal() {
+            document.getElementById('addUserModal').classList.add('active');
+        }
+
+        function closeAddUserModal() {
+            document.getElementById('addUserModal').classList.remove('active');
+            // Reset form
+            document.getElementById('newUserName').value = '';
+            document.getElementById('newUserEmail').value = '';
+            document.getElementById('newUserPassword').value = '';
+            document.getElementById('newUserRole').value = 'user';
+        }
+
+        function createNewUser() {
+            const name = document.getElementById('newUserName').value;
+            const email = document.getElementById('newUserEmail').value;
+            const password = document.getElementById('newUserPassword').value;
+            const role = document.getElementById('newUserRole').value;
+
+            if (!name || !email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const result = AuthSystem.createUser({
+                name,
+                email,
+                password,
+                role
+            });
+
+            if (result.success) {
+                closeAddUserModal();
+                loadUsers();
+                alert('User created successfully!');
+            }
+        }
+
+        function viewUser(userId) {
+            const user = AuthSystem.getUserById(userId);
+            if (user) {
+                alert(`User Details:\n\nName: ${user.name}\nEmail: ${user.email}\nRole: ${user.role}\nJoin Date: ${new Date(user.joinDate).toLocaleDateString()}`);
+            }
+        }
+
+        function editUser(userId) {
+            const user = AuthSystem.getUserById(userId);
+            if (user) {
+                const newRole = prompt('Change user role:', user.role);
+                if (newRole && (newRole === 'user' || newRole === 'admin')) {
+                    AuthSystem.updateUser(userId, { role: newRole });
+                    loadUsers();
+                }
+            }
+        }
+
+        function deleteUser(userId) {
+            if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+                if (AuthSystem.deleteUser(userId)) {
+                    loadUsers();
+                }
+            }
+        }
+
+        function exportUsers() {
+            const users = AuthSystem.getAllUsers();
+            const csvContent = "data:text/csv;charset=utf-8,"
+                + "Name,Email,Role,Join Date,Status\n"
+                + users.map(user =>
+                    `"${user.name}","${user.email}","${user.role}","${user.joinDate}","Active"`
+                ).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "skillswap_users.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+
+</html>
