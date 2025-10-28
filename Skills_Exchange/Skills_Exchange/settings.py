@@ -56,7 +56,7 @@ ROOT_URLCONF = 'Skills_Exchange.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "DIRS": [BASE_DIR / "main" / "templates"],
         'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
