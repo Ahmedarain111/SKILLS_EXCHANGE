@@ -3,13 +3,13 @@ from .models import UserProfile, Skill
 
 class UserProfileForm(forms.ModelForm):
     skills_have = forms.ModelMultipleChoiceField(
-        queryset=Skill.objects.none(),
+        queryset=Skill.objects.all(),
         widget=forms.CheckboxSelectMultiple,
         required=False,
-        label="Skills You Can Teach"
+        label="Skills You Have"
     )
     skills_want = forms.ModelMultipleChoiceField(
-        queryset=Skill.objects.none(),
+        queryset=Skill.objects.all(),
         widget=forms.CheckboxSelectMultiple,
         required=False,
         label="Skills You Want to Learn"
@@ -17,4 +17,4 @@ class UserProfileForm(forms.ModelForm):
 
     class Meta:
         model = UserProfile
-        fields = ["full_name", "bio", "location", "certifications", "skills_have", "skills_want"]
+        fields = ['full_name', 'bio', 'location', 'certifications']

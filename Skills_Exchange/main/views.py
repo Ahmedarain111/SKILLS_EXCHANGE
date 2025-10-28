@@ -7,8 +7,9 @@ from django.contrib.admin.views.decorators import staff_member_required
 from .models import Skill, Exchange
 from .forms import UserProfileForm
 from .models import UserProfile
-from .models import UserProfile, Skill, UserSkill, Exchange
+from .models import UserProfile, Skill, UserSkill
 from django.db.models import Q
+from .models import Skill, Category
 
 
 def signup_view(request):
@@ -64,23 +65,33 @@ def index_view(request):
     return render(request, "index.html")
 
 
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import UserSkill, Category
+
+
 @login_required
 def marketplace_view(request):
-    current_user = request.user
-    others_skills = UserSkill.objects.select_related("user", "skill").exclude(
-        user=current_user
-    )
-    teach_skills = others_skills.filter(skill_type="teach")
-    learn_skills = others_skills.filter(skill_type="learn")
+    # Get all categories for sidebar
+    categories = Category.objects.all()
 
-    return render(
-        request,
-        "marketplace.html",
-        {
-            "teach_skills": teach_skills,
-            "learn_skills": learn_skills,
-        },
-    )
+    # Read selected category from query (?category=1)
+    category_id = request.GET.get("category")
+
+    # Start with all offered skills (exclude current user)
+    offered_skills = UserSkill.objects.filter(role="offer").exclude(user=request.user)
+
+    # If a category filter is applied
+    if category_id:
+        offered_skills = offered_skills.filter(skill__category_id=category_id)
+
+    # Prepare context
+    context = {
+        "categories": categories,
+        "skills": offered_skills,  # pass UserSkill queryset
+    }
+
+    return render(request, "marketplace.html", context)
 
 
 @staff_member_required
@@ -113,66 +124,27 @@ def admin_exchanges(request):
     return render(request, "admin_exchanges.html", {"exchanges": exchanges})
 
 
+
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.models import User
+from .models import UserProfile, UserSkill
+
 @login_required
-def create_profile(request):
-    from .models import Skill, UserSkill, UserProfile
+def profile_view(request, username):
+    user = get_object_or_404(User, username=username)
+    profile = get_object_or_404(UserProfile, user=user)
 
-    try:
-        profile = UserProfile.objects.get(user=request.user)
-    except UserProfile.DoesNotExist:
-        profile = None
+    offered_skills = UserSkill.objects.filter(user=user, role="offer")
+    wanted_skills = UserSkill.objects.filter(user=user, role="seek")
 
-    if request.method == "POST":
-        form = UserProfileForm(request.POST, request.FILES, instance=profile)
-        if form.is_valid():
-            user_profile = form.save(commit=False)
-            user_profile.user = request.user
-            user_profile.save()
+    context = {
+        "profile_user": user,
+        "profile": profile,
+        "offered_skills": offered_skills,
+        "wanted_skills": wanted_skills,
+    }
 
-            # Clear previous user skills before saving
-            UserSkill.objects.filter(user=request.user).delete()
-
-            # Handle "skills you have"
-            for skill_id in request.POST.getlist("skills_have"):
-                skill = Skill.objects.get(id=skill_id)
-                proficiency = request.POST.get(f"proficiency_{skill_id}", "")
-                experience = request.POST.get(f"experience_{skill_id}", 0)
-                UserSkill.objects.create(
-                    user=request.user,
-                    skill=skill,
-                    skill_type="teach",
-                    proficiency=proficiency,
-                    experience_years=experience
-                )
-
-            # Handle "skills you want"
-            for skill_id in request.POST.getlist("skills_want"):
-                skill = Skill.objects.get(id=skill_id)
-                proficiency = request.POST.get(f"proficiency_want_{skill_id}", "")
-                experience = request.POST.get(f"experience_want_{skill_id}", 0)
-                UserSkill.objects.create(
-                    user=request.user,
-                    skill=skill,
-                    skill_type="learn",
-                    proficiency=proficiency,
-                    experience_years=experience
-                )
-
-            messages.success(request, "Profile and skills saved successfully!")
-            return redirect("dashboard")
-    else:
-        form = UserProfileForm(instance=profile)
-
-    # 🟢 Important — send Skill data to template
-    skills_have = Skill.objects.all()
-    skills_want = Skill.objects.all()
-
-    return render(request, "profile.html", {
-        "form": form,
-        "skills_have": skills_have,
-        "skills_want": skills_want,
-    })
-
+    return render(request, "profile.html", context)
 
 
 @login_required
@@ -181,14 +153,12 @@ def dashboard_view(request):
 
     profile = UserProfile.objects.filter(user=user).first()
 
-    # Skill stats
     skills_have_count = UserSkill.objects.filter(user=user, skill_type="teach").count()
     skills_want_count = UserSkill.objects.filter(user=user, skill_type="learn").count()
     active_exchanges_count = Exchange.objects.filter(
-        Q(requester=user) | Q(receiver=user), status="accepted"
+        Q(user1=user) | Q(user2=user), status="active"
     ).count()
 
-    # Profile completion
     if profile:
         fields = [profile.full_name, profile.bio, profile.location]
         completion_fields = sum(bool(f) for f in fields)
@@ -197,29 +167,28 @@ def dashboard_view(request):
     else:
         profile_completion = 0
 
-    # Recent exchanges
-    recent_exchanges = Exchange.objects.filter(
-        Q(requester=user) | Q(receiver=user)
-    ).order_by("-created_at")[:5]
+    recent_exchanges = Exchange.objects.filter(Q(user1=user) | Q(user2=user)).order_by(
+        "-start_date"
+    )[:5]
 
     recent_activity = []
     for ex in recent_exchanges:
-        partner = ex.receiver if ex.requester == user else ex.requester
-        skill_you_offer = ex.skill.skill.name
+        partner = ex.user2 if ex.user1 == user else ex.user1
+        skill_you_give = ex.skill1 if ex.user1 == user else ex.skill2
+        skill_you_get = ex.skill2 if ex.user1 == user else ex.skill1
         recent_activity.append(
             {
                 "icon": "fas fa-handshake",
                 "title": (
-                    "Exchange Active"
-                    if ex.status == "accepted"
+                    "Exchange Started"
+                    if ex.status == "active"
                     else ex.get_status_display()
                 ),
-                "desc": f"With {partner.username}: {skill_you_offer}",
-                "time": ex.created_at.strftime("%b %d, %Y"),
+                "desc": f"With {partner.username}: {skill_you_give} ↔ {skill_you_get}",
+                "time": ex.start_date.strftime("%b %d, %Y"),
             }
         )
 
-    # Potential matches
     your_teach_skills = UserSkill.objects.filter(
         user=user, skill_type="teach"
     ).values_list("skill", flat=True)
@@ -263,31 +232,28 @@ def dashboard_view(request):
 
 @login_required
 def start_exchange(request, user_id, skill_id):
-    from_user = request.user
-    to_user_skill = get_object_or_404(UserSkill, id=skill_id, user__id=user_id)
+    """Initiate an exchange with another user."""
+    other_user_skill = get_object_or_404(UserSkill, id=skill_id, user_id=user_id)
+    current_user = request.user
 
-    # Prevent users from starting exchange with themselves
-    if from_user == to_user_skill.user:
-        messages.warning(request, "You cannot start an exchange with yourself.")
-        return redirect("marketplace")
-
-    # Check if exchange already exists
-    existing_exchange = Exchange.objects.filter(
-        (Q(requester=from_user) & Q(receiver=to_user_skill.user))
-        | (Q(requester=to_user_skill.user) & Q(receiver=from_user))
+    teach_skill = UserSkill.objects.filter(
+        user=current_user, skill_type="teach"
     ).first()
+    if not teach_skill:
+        messages.error(
+            request, "You must add a teaching skill before starting an exchange."
+        )
+        return redirect("dashboard")
 
-    if existing_exchange:
-        messages.info(request, "Exchange already exists. Redirecting to chat...")
-        return redirect("exchange_detail", exchange_id=existing_exchange.id)
-
-    # Create a new exchange
     exchange = Exchange.objects.create(
-        requester=from_user,
-        receiver=to_user_skill.user,
-        skill=to_user_skill.skill,
+        user1=current_user,
+        user2=other_user_skill.user,
+        skill1=teach_skill.skill,
+        skill2=other_user_skill.skill,
         status="pending",
     )
 
-    messages.success(request, "Exchange request sent successfully!")
-    return redirect("exchange_detail", exchange_id=exchange.id)
+    messages.success(
+        request, f"Exchange request sent to {other_user_skill.user.username}!"
+    )
+    return redirect("dashboard")

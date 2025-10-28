@@ -1,191 +1,61 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Your Skill Profile | SkillSwap</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
-    <style>
-        .form-section { display: none; opacity: 0; transition: opacity 0.4s ease; }
-        .form-section.active { display: block; opacity: 1; }
-        .progress-step.active .step-number {
-            background: #2563EB; color: white; border: none;
-        }
-        .step-number {
-            width: 35px; height: 35px; border-radius: 50%;
-            border: 2px solid #2563EB; display: flex;
-            align-items: center; justify-content: center; font-weight: bold;
-        }
-        .skill-group {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            background: #f9fafb;
-        }
-    </style>
-</head>
-<body>
 
-<header>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container">
-            <a class="navbar-brand logo" href="/">Skill<span>Swap</span></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto nav-links">
-                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/marketplace/">Marketplace</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/dashboard/">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/messages/">Messages</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="#">My Profile</a></li>
-                </ul>
-                <div class="user-menu">
-                    <div class="user-avatar">{{ user.first_name|default:user.username|slice:":2"|upper }}</div>
-                </div>
-            </div>
+{% block title %}{{ profile_user.username }}'s Profile{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row">
+    <!-- Profile Info -->
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body text-center">
+          <img src="{% static 'img/default-avatar.png' %}" class="rounded-circle mb-3" width="100" height="100" alt="User Avatar">
+          <h4 class="fw-bold">{{ profile.full_name }}</h4>
+          <p class="text-muted mb-1">{{ profile.location }}</p>
+          <p>{{ profile.bio }}</p>
+          {% if profile.certifications %}
+            <a href="{{ profile.certifications.url }}" class="btn btn-outline-primary btn-sm mt-2" target="_blank">View Certification</a>
+          {% endif %}
+          <p class="text-muted small mt-3">Joined: {{ profile.created_at|date:"F Y" }}</p>
         </div>
-    </nav>
-</header>
-
-<div class="main-content">
-    <div class="container">
-        <div class="page-header text-center my-5">
-            <h1>Create Your Skill Profile</h1>
-            <p>Showcase your talents and discover what you want</p>
-        </div>
-
-        <div class="profile-creator d-flex flex-wrap justify-content-center">
-            <div class="progress-sidebar me-4 mb-4">
-                <h2>Profile Progress</h2>
-                <ul class="progress-steps list-unstyled">
-                    <li class="progress-step active" data-step="1">
-                        <div class="step-number">1</div><div class="step-text"><h3>Basic Info</h3></div>
-                    </li>
-                    <li class="progress-step" data-step="2">
-                        <div class="step-number">2</div><div class="step-text"><h3>Skills You Have</h3></div>
-                    </li>
-                    <li class="progress-step" data-step="3">
-                        <div class="step-number">3</div><div class="step-text"><h3>Skills You Want</h3></div>
-                    </li>
-                    <li class="progress-step" data-step="4">
-                        <div class="step-number">4</div><div class="step-text"><h3>Certifications</h3></div>
-                    </li>
-                    <li class="progress-step" data-step="5">
-                        <div class="step-number">5</div><div class="step-text"><h3>Preview</h3></div>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="form-container flex-grow-1" style="max-width: 700px;">
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-
-                    <!-- STEP 1 -->
-                    <div class="form-section active" id="step-1">
-                        <h2>Basic Information</h2>
-                        <div class="mb-3">{{ form.full_name.label_tag }} {{ form.full_name }}</div>
-                        <div class="mb-3">{{ form.bio.label_tag }} {{ form.bio }}</div>
-                        <div class="mb-3">{{ form.location.label_tag }} {{ form.location }}</div>
-
-                        <div class="d-flex justify-content-between">
-                            <button class="btn btn-outline-secondary" disabled>Previous</button>
-                            <button class="btn btn-primary next-step" data-next="2">Next</button>
-                        </div>
-                    </div>
-
-                    <!-- STEP 2: Skills Have -->
-                    <div class="form-section" id="step-2">
-                        <h2>Skills You Have</h2>
-                        <p>Select skills you can teach or share with others.</p>
-                        
-                        {% for skill in skills_have %}
-                        <div class="skill-group">
-                            <label><input type="checkbox" name="skills_have" value="{{ skill.id }}"> {{ skill.name }}</label>
-                            <div class="mt-2 ms-3">
-                                <label>Proficiency:</label>
-                                <select name="proficiency_{{ skill.id }}" class="form-select form-select-sm">
-                                    <option value="beginner">Beginner</option>
-                                    <option value="intermediate">Intermediate</option>
-                                    <option value="advanced">Advanced</option>
-                                    <option value="expert">Expert</option>
-                                </select>
-                                <label class="mt-2">Years of Experience:</label>
-                                <input type="number" name="experience_{{ skill.id }}" class="form-control form-control-sm" min="0" placeholder="e.g., 2">
-                            </div>
-                        </div>
-                        {% endfor %}
-
-                        <div class="d-flex justify-content-between">
-                            <button class="btn btn-outline-secondary prev-step" data-prev="1">Previous</button>
-                            <button class="btn btn-primary next-step" data-next="3">Next</button>
-                        </div>
-                    </div>
-
-                    <!-- STEP 3: Skills Want -->
-                    <div class="form-section" id="step-3">
-                        <h2>Skills You Want to Learn</h2>
-                        <p>Select skills you’re eager to learn.</p>
-
-                        {% for skill in skills_want %}
-                        <div class="skill-group">
-                            <label><input type="checkbox" name="skills_want" value="{{ skill.id }}"> {{ skill.name }}</label>
-                            <div class="mt-2 ms-3">
-                                <label>Current Level:</label>
-                                <select name="proficiency_want_{{ skill.id }}" class="form-select form-select-sm">
-                                    <option value="beginner">Beginner</option>
-                                    <option value="intermediate">Intermediate</option>
-                                </select>
-                                <label class="mt-2">Experience (if any):</label>
-                                <input type="number" name="experience_want_{{ skill.id }}" class="form-control form-control-sm" min="0" placeholder="e.g., 0">
-                            </div>
-                        </div>
-                        {% endfor %}
-
-                        <div class="d-flex justify-content-between">
-                            <button class="btn btn-outline-secondary prev-step" data-prev="2">Previous</button>
-                            <button class="btn btn-primary next-step" data-next="4">Next</button>
-                        </div>
-                    </div>
-
-                    <!-- STEP 4 -->
-                    <div class="form-section" id="step-4">
-                        <h2>Certifications</h2>
-                        {{ form.certifications.label_tag }}
-                        {{ form.certifications }}
-
-                        <div class="d-flex justify-content-between">
-                            <button class="btn btn-outline-secondary prev-step" data-prev="3">Previous</button>
-                            <button class="btn btn-primary next-step" data-next="5">Next</button>
-                        </div>
-                    </div>
-
-                    <!-- STEP 5 -->
-                    <div class="form-section" id="step-5">
-                        <h2>Preview & Complete</h2>
-                        <p>Review your info before completing your profile.</p>
-                        <div class="d-flex justify-content-between">
-                            <button class="btn btn-outline-secondary prev-step" data-prev="4">Previous</button>
-                            <button type="submit" class="btn btn-success">Complete Profile</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
+      </div>
     </div>
+
+    <!-- Skills Section -->
+    <div class="col-md-8">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <h5 class="fw-bold mb-3 text-primary">Offered Skills</h5>
+          {% if offered_skills %}
+            <ul class="list-group mb-4">
+              {% for skill in offered_skills %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>{{ skill.skill.name }}</span>
+                  <small class="text-muted">{{ skill.proficiency|title }} • {{ skill.experience_years }} yrs</small>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No offered skills yet.</p>
+          {% endif %}
+
+          <h5 class="fw-bold mb-3 text-success">Wanted Skills</h5>
+          {% if wanted_skills %}
+            <ul class="list-group">
+              {% for skill in wanted_skills %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>{{ skill.skill.name }}</span>
+                  <small class="text-muted">{{ skill.proficiency|title }} • {{ skill.experience_years }} yrs</small>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No wanted skills yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-
-<footer class="mt-5 bg-light pt-4 pb-2 text-center">
-    <p>&copy; 2025 SkillSwap. All rights reserved.</p>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{% static 'js/profile.js' %}"></script>
-</body>
-</html>
+{% endblock %}
