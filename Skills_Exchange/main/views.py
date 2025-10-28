@@ -124,16 +124,27 @@ def admin_exchanges(request):
     return render(request, "admin_exchanges.html", {"exchanges": exchanges})
 
 
-
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from .models import UserProfile, UserSkill
 
-@login_required
-def profile_view(request, username):
-    user = get_object_or_404(User, username=username)
-    profile = get_object_or_404(UserProfile, user=user)
 
+@login_required
+def profile_view(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+
+    # Redirect to profile creation page if profile not found
+    try:
+        profile = UserProfile.objects.get(user=user)
+    except UserProfile.DoesNotExist:
+        # If current logged-in user is viewing their own profile
+        if request.user == user:
+            return redirect("create_profile")
+        else:
+            # Show 404 if trying to view someone else's missing profile
+            return render(request, "profile_not_found.html", {"profile_user": user})
+
+    # Fetch offered and wanted skills
     offered_skills = UserSkill.objects.filter(user=user, role="offer")
     wanted_skills = UserSkill.objects.filter(user=user, role="seek")
 
@@ -146,6 +157,25 @@ def profile_view(request, username):
 
     return render(request, "profile.html", context)
 
+
+@login_required
+def create_profile(request):
+    if hasattr(request.user, "userprofile"):
+        messages.info(request, "You already have a profile.")
+        return redirect("profile", user_id=request.user.id)
+
+    if request.method == "POST":
+        form = UserProfileForm(request.POST, request.FILES)
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.user = request.user
+            profile.save()
+            messages.success(request, "Profile created successfully!")
+            return redirect("profile", user_id=request.user.id)
+    else:
+        form = UserProfileForm()
+
+    return render(request, "create_profile.html", {"form": form})
 
 @login_required
 def dashboard_view(request):
