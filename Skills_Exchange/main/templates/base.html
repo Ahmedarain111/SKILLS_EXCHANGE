@@ -43,6 +43,9 @@
           </li>
           {% if user.is_authenticated %}
           <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'exchanges' %}active{% endif %}" href="{% url 'exchanges' %}">My Exchanges</a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'messages' or request.resolver_match.url_name == 'conversation' %}active{% endif %}" href="{% url 'messages' %}">
               Messages
             </a>

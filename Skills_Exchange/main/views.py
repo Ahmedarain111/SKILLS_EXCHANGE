@@ -407,6 +407,65 @@ def dashboard_view(request):
 
 
 @login_required
+def exchanges_view(request):
+    """Display all exchanges for the current user."""
+    user = request.user
+    
+    all_exchanges = Exchange.objects.filter(
+        Q(user1=user) | Q(user2=user)
+    ).select_related(
+        "user1", "user2", "user1__userprofile", "user2__userprofile", "skill1", "skill2"
+    ).order_by("-start_date")
+    
+    pending_exchanges = []
+    active_exchanges = []
+    completed_exchanges = []
+    other_exchanges = []
+    
+    for exchange in all_exchanges:
+        other_user = exchange.user2 if exchange.user1 == user else exchange.user1
+        other_user_name = (
+            other_user.userprofile.full_name
+            if hasattr(other_user, "userprofile") and other_user.userprofile.full_name
+            else other_user.username
+        )
+        
+        is_initiator = exchange.user1 == user
+        
+        exchange_data = {
+            "id": exchange.id,
+            "other_user": other_user,
+            "other_user_name": other_user_name,
+            "is_initiator": is_initiator,
+            "my_skill": exchange.skill1 if is_initiator else exchange.skill2,
+            "their_skill": exchange.skill2 if is_initiator else exchange.skill1,
+            "status": exchange.status,
+            "start_date": exchange.start_date,
+            "last_updated": exchange.last_updated,
+            "notes": exchange.notes,
+        }
+        
+        if exchange.status == "pending":
+            pending_exchanges.append(exchange_data)
+        elif exchange.status == "active":
+            active_exchanges.append(exchange_data)
+        elif exchange.status == "completed":
+            completed_exchanges.append(exchange_data)
+        else:
+            other_exchanges.append(exchange_data)
+    
+    context = {
+        "pending_exchanges": pending_exchanges,
+        "active_exchanges": active_exchanges,
+        "completed_exchanges": completed_exchanges,
+        "other_exchanges": other_exchanges,
+        "total_count": all_exchanges.count(),
+    }
+    
+    return render(request, "exchanges.html", context)
+
+
+@login_required
 def start_exchange(request, user_id, skill_id):
     """Initiate an exchange with another user."""
     other_user_skill = get_object_or_404(UserSkill, id=skill_id, user_id=user_id)
