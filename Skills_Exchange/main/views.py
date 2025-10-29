@@ -1,26 +1,54 @@
+# Django core imports
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-from .models import Skill, Exchange
-from .forms import UserProfileForm
-from .models import UserProfile
-from .models import UserProfile, Skill, UserSkill
 from django.db.models import Q
-from .models import Skill, Category
+from django.forms import modelformset_factory
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+
+# Local imports
+from .models import (
+    UserProfile,
+    Skill,
+    UserSkill,
+    Category,
+    Exchange,
+    Message,
+)
+from .forms import UserProfileForm
+
+User = get_user_model()
 
 
 def signup_view(request):
     if request.method == "POST":
-        name = request.POST.get("fullname")
-        email = request.POST.get("email")
-        password = request.POST.get("password")
-        confirm = request.POST.get("confirm")
+        name = request.POST.get("fullname", "").strip()
+        email = request.POST.get("email", "").strip()
+        password = request.POST.get("password", "")
+        confirm = request.POST.get("confirm", "")
+
+        # Validation
+        if not name or not email or not password:
+            messages.error(request, "All fields are required!")
+            return redirect("signup")
 
         if password != confirm:
             messages.error(request, "Passwords do not match!")
+            return redirect("signup")
+
+        if len(password) < 6:
+            messages.error(request, "Password must be at least 6 characters long!")
+            return redirect("signup")
+
+        # Validate email format
+        try:
+            validate_email(email)
+        except ValidationError:
+            messages.error(request, "Please enter a valid email address!")
             return redirect("signup")
 
         if User.objects.filter(username=email).exists():
@@ -61,10 +89,6 @@ def login_view(request):
     return render(request, "login.html")
 
 
-from django.contrib.auth import logout
-from django.shortcuts import redirect
-
-
 def logout_view(request):
     logout(request)
     return redirect("index")
@@ -72,16 +96,6 @@ def logout_view(request):
 
 def index_view(request):
     return render(request, "index.html")
-
-
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from .models import UserSkill, Category
-
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from .models import Category, UserSkill
 
 
 @login_required
@@ -96,8 +110,12 @@ def marketplace_view(request):
     category_id = request.GET.get("category")
     level = request.GET.get("level")
 
-    # Start with all offered skills (exclude current user)
-    offered_skills = UserSkill.objects.filter(role="offer").exclude(user=request.user)
+    # Start with all offered skills (exclude current user) with optimized queries
+    offered_skills = (
+        UserSkill.objects.filter(role="offer")
+        .exclude(user=request.user)
+        .select_related("user", "user__userprofile", "skill", "skill__category")
+    )
 
     # Apply category filter if not empty or "All"
     if category_id and category_id.lower() != "all":
@@ -111,7 +129,7 @@ def marketplace_view(request):
     context = {
         "categories": categories,
         "skills": offered_skills,
-        "levels": levels,  # pass to template
+        "levels": levels,
         "selected_category": category_id or "all",
         "selected_level": level or "any",
     }
@@ -144,14 +162,12 @@ def admin_users(request):
     return render(request, "admin_users.html", {"users": users})
 
 
+@staff_member_required
 def admin_exchanges(request):
-    exchanges = Exchange.objects.all()
+    exchanges = Exchange.objects.all().select_related(
+        "user1", "user2", "user1__userprofile", "user2__userprofile", "skill1", "skill2"
+    )
     return render(request, "admin_exchanges.html", {"exchanges": exchanges})
-
-
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.models import User
-from .models import UserProfile, UserSkill
 
 
 @login_required
@@ -160,7 +176,7 @@ def profile_view(request, user_id):
 
     # Redirect to profile creation page if profile not found
     try:
-        profile = UserProfile.objects.get(user=user)
+        profile = UserProfile.objects.select_related("user").get(user=user)
     except UserProfile.DoesNotExist:
         # If current logged-in user is viewing their own profile
         if request.user == user:
@@ -170,8 +186,8 @@ def profile_view(request, user_id):
             return render(request, "profile_not_found.html", {"profile_user": user})
 
     # Fetch offered and wanted skills
-    offered_skills = UserSkill.objects.filter(user=user, role="offer")
-    wanted_skills = UserSkill.objects.filter(user=user, role="seek")
+    offered_skills = UserSkill.objects.filter(user=user, role="offer").select_related("skill")
+    wanted_skills = UserSkill.objects.filter(user=user, role="seek").select_related("skill")
 
     context = {
         "profile_user": user,
@@ -203,14 +219,6 @@ def create_profile(request):
     return render(request, "create_profile.html", {"form": form})
 
 
-from django.db.models import Q
-from django.shortcuts import render
-from .models import UserProfile, UserSkill, Exchange
-
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-
-
 @login_required
 def dashboard_view(request):
     user = request.user
@@ -239,8 +247,8 @@ def dashboard_view(request):
     recent_activities = []
     recent_exchanges = (
         Exchange.objects.filter(Q(user1=user) | Q(user2=user))
+        .select_related("user1", "user2", "user1__userprofile", "user2__userprofile", "skill1", "skill2")
         .order_by("-last_updated")[:5]
-        .select_related("user1", "user2", "skill1", "skill2")
     )
 
     for exchange in recent_exchanges:
@@ -306,7 +314,7 @@ def dashboard_view(request):
             # Check if they seek what I offer
             their_seeking = UserSkill.objects.filter(
                 user=other_user, role="seek", skill_id__in=my_offering_skills
-            ).first()
+            ).select_related("skill").first()
 
             if their_seeking:
                 name = (
@@ -372,23 +380,6 @@ def start_exchange(request, user_id, skill_id):
     return redirect("dashboard")
 
 
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from .models import UserSkill
-from .forms import UserSkillFormSet
-
-from django.shortcuts import render, redirect
-from django.forms import modelformset_factory
-from django.contrib.auth.decorators import login_required
-from .models import UserSkill
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.forms import modelformset_factory
-from .models import UserSkill
-
-
 @login_required
 def manage_skills(request):
     SkillFormSet = modelformset_factory(
@@ -415,7 +406,7 @@ def manage_skills(request):
 
             return redirect("profile", user_id=request.user.id)
         else:
-            print(formset.errors)  # Debug line
+            messages.error(request, "Please correct the errors in the form.")
     else:
         formset = SkillFormSet(queryset=queryset)
 
@@ -425,13 +416,19 @@ def manage_skills(request):
 @login_required
 def propose_exchange_view(request, user_skill_id):
     """View to propose a skill exchange with another user."""
-    other_user_skill = get_object_or_404(UserSkill, id=user_skill_id, role="offer")
+    other_user_skill = get_object_or_404(
+        UserSkill.objects.select_related("user", "user__userprofile", "skill"), 
+        id=user_skill_id, 
+        role="offer"
+    )
 
     if other_user_skill.user == request.user:
         messages.error(request, "You cannot propose an exchange with yourself!")
         return redirect("marketplace")
 
-    my_offered_skills = UserSkill.objects.filter(user=request.user, role="offer")
+    my_offered_skills = UserSkill.objects.filter(
+        user=request.user, role="offer"
+    ).select_related("skill")
 
     if request.method == "POST":
         my_skill_id = request.POST.get("my_skill")
@@ -456,7 +453,7 @@ def propose_exchange_view(request, user_skill_id):
 
         messages.success(
             request,
-            f"Exchange proposal sent to {other_user_skill.user.userprofile.full_name if hasattr(other_user_skill.user, 'userprofile') else other_user_skill.user.username}!",
+            f"Exchange proposal sent to {other_user_skill.user.userprofile.full_name if hasattr(other_user_skill.user, 'userprofile') and other_user_skill.user.userprofile.full_name else other_user_skill.user.username}!",
         )
         return redirect("dashboard")
 
@@ -472,7 +469,10 @@ def propose_exchange_view(request, user_skill_id):
 def accept_exchange(request, exchange_id):
     """Accept a pending exchange proposal."""
     exchange = get_object_or_404(
-        Exchange, id=exchange_id, user2=request.user, status="pending"
+        Exchange.objects.select_related("user1", "user1__userprofile", "user2", "skill1", "skill2"),
+        id=exchange_id,
+        user2=request.user,
+        status="pending"
     )
 
     exchange.status = "active"
@@ -480,7 +480,7 @@ def accept_exchange(request, exchange_id):
 
     messages.success(
         request,
-        f"Exchange accepted! You can now start learning {exchange.skill1.name} from {exchange.user1.userprofile.full_name if hasattr(exchange.user1, 'userprofile') else exchange.user1.username}.",
+        f"Exchange accepted! You can now start learning {exchange.skill1.name} from {exchange.user1.userprofile.full_name if hasattr(exchange.user1, 'userprofile') and exchange.user1.userprofile.full_name else exchange.user1.username}.",
     )
     return redirect("dashboard")
 
@@ -499,51 +499,56 @@ def reject_exchange(request, exchange_id):
     return redirect("dashboard")
 
 
-from .models import Message
-from django.db.models import Max, OuterRef, Subquery
-
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Q
-from .models import Message
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
-
-
 @login_required
 def messages_view(request, user_id=None):
     """Display list of conversations and optionally a selected conversation."""
     current_user = request.user
 
-    # --- Build conversation list ---
-    sent_to = (
+    # --- Build conversation list with optimized queries ---
+    # Get all users the current user has messaged with
+    sent_to_ids = (
         Message.objects.filter(sender=current_user)
-        .values_list("receiver", flat=True)
+        .values_list("receiver_id", flat=True)
         .distinct()
     )
-    received_from = (
+    received_from_ids = (
         Message.objects.filter(receiver=current_user)
-        .values_list("sender", flat=True)
+        .values_list("sender_id", flat=True)
         .distinct()
     )
-    conversation_user_ids = set(list(sent_to) + list(received_from))
+    conversation_user_ids = set(list(sent_to_ids) + list(received_from_ids))
 
+    # Fetch all conversation users with profiles in one query
+    conversation_users = User.objects.filter(id__in=conversation_user_ids).select_related("userprofile")
+    user_map = {user.id: user for user in conversation_users}
+
+    # Fetch all relevant messages for conversations in bulk
+    all_messages = Message.objects.filter(
+        Q(sender=current_user, receiver_id__in=conversation_user_ids)
+        | Q(sender_id__in=conversation_user_ids, receiver=current_user)
+    ).select_related("sender", "receiver")
+
+    # Build conversation data
     conversations = []
     for uid in conversation_user_ids:
-        other_user = User.objects.get(id=uid)
-        last_message = (
-            Message.objects.filter(
-                Q(sender=current_user, receiver=other_user)
-                | Q(sender=other_user, receiver=current_user)
-            )
-            .order_by("-timestamp")
-            .first()
+        other_user = user_map.get(uid)
+        if not other_user:
+            continue
+
+        # Find last message for this conversation
+        user_messages = [
+            m for m in all_messages
+            if (m.sender_id == current_user.id and m.receiver_id == uid)
+            or (m.sender_id == uid and m.receiver_id == current_user.id)
+        ]
+        last_message = max(user_messages, key=lambda m: m.timestamp, default=None)
+
+        # Count unread messages
+        unread_count = sum(
+            1 for m in user_messages
+            if m.sender_id == uid and m.receiver_id == current_user.id and not m.is_read
         )
-        unread_count = Message.objects.filter(
-            sender=other_user, receiver=current_user, is_read=False
-        ).count()
+
         conversations.append(
             {
                 "user": other_user,
@@ -564,7 +569,7 @@ def messages_view(request, user_id=None):
     selected_user = None
     messages_list = []
     if user_id:
-        selected_user = get_object_or_404(User, id=user_id)
+        selected_user = get_object_or_404(User.objects.select_related("userprofile"), id=user_id)
 
         # Mark unread messages as read
         Message.objects.filter(
