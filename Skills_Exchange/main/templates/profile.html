@@ -165,50 +165,65 @@
                     <p class="text-muted small">Joined {{ profile_user.date_joined|date:"F Y" }}</p>
                 </div>
             <!-- Offered Skills -->
-            <div class="profile-card skill-section">
-                <h4><i class="fa-solid fa-handshake me-2"></i>Skills Offered</h4>
-                {% if offered_skills %}
-                {% for skill in offered_skills %}
-                <span class="skill-badge">
-                    {{ skill.skill.name }}
-                    {% if skill.proficiency %} — {{ skill.proficiency|title }}{% endif %}
-                    {% if skill.experience_years %} ({{ skill.experience_years }} yrs){% endif %}
-                </span>
-                {% endfor %}
-                {% else %}
-                <p class="text-muted">
-                    No offered skills yet.
-                    {% if user == profile_user %}
-                    <a href="{% url 'manage_skills' %}" class="ms-2 text-decoration-none text-primary fw-semibold">
-                        Add some now →
-                    </a>
-                    {% endif %}
-                </p>
-                {% endif %}
-            </div>
+<div class="profile-card skill-section">
+  <div class="d-flex justify-content-between align-items-center">
+    <h4 class="mb-0">
+      <i class="fa-solid fa-handshake me-2"></i>Skills Offered
+    </h4>
+    {% if user == profile_user %}
+      <a href="{% url 'manage_skills' %}" class="btn btn-sm btn-outline-primary">
+        + Add Skill
+      </a>
+    {% endif %}
+  </div>
 
-            <!-- Wanted Skills -->
-            <div class="profile-card skill-section">
-                <h4><i class="fa-solid fa-lightbulb me-2 text-warning"></i>Skills Wanted</h4>
-                {% if wanted_skills %}
-                {% for skill in wanted_skills %}
-                <span class="skill-badge bg-success-subtle text-success border border-success">
-                    {{ skill.skill.name }}
-                    {% if skill.proficiency %} — {{ skill.proficiency|title }}{% endif %}
-                    {% if skill.experience_years %} ({{ skill.experience_years }} yrs){% endif %}
-                </span>
-                {% endfor %}
-                {% else %}
-                <p class="text-muted">
-                    No wanted skills yet.
-                    {% if user == profile_user %}
-                    <a href="{% url 'manage_skills' %}" class="ms-2 text-decoration-none text-primary fw-semibold">
-                        Add some now →
-                    </a>
-                    {% endif %}
-                </p>
-                {% endif %}
-            </div>
+  <div class="mt-3">
+    {% if offered_skills %}
+      {% for skill in offered_skills %}
+        <span class="skill-badge">
+          {{ skill.skill.name }}
+          {% if skill.proficiency %} — {{ skill.proficiency|title }}{% endif %}
+          {% if skill.experience_years %} ({{ skill.experience_years }} yrs){% endif %}
+        </span>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted mb-0">
+        No offered skills yet.
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Wanted Skills -->
+<div class="profile-card skill-section mt-4">
+  <div class="d-flex justify-content-between align-items-center">
+    <h4 class="mb-0">
+      <i class="fa-solid fa-lightbulb me-2 text-warning"></i>Skills Wanted
+    </h4>
+    {% if user == profile_user %}
+      <a href="{% url 'manage_skills' %}" class="btn btn-sm btn-outline-success">
+        + Add Skill
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="mt-3">
+    {% if wanted_skills %}
+      {% for skill in wanted_skills %}
+        <span class="skill-badge bg-success-subtle text-success border border-success">
+          {{ skill.skill.name }}
+          {% if skill.proficiency %} — {{ skill.proficiency|title }}{% endif %}
+          {% if skill.experience_years %} ({{ skill.experience_years }} yrs){% endif %}
+        </span>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted mb-0">
+        No wanted skills yet.
+      </p>
+    {% endif %}
+  </div>
+</div>
+
 
 
             {% if profile.certifications %}

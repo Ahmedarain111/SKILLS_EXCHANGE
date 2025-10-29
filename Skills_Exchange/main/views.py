@@ -298,34 +298,52 @@ def start_exchange(request, user_id, skill_id):
     )
     return redirect("dashboard")
 
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import UserSkill
 from .forms import UserSkillFormSet
 
+from django.shortcuts import render, redirect
+from django.forms import modelformset_factory
+from django.contrib.auth.decorators import login_required
+from .models import UserSkill
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.forms import modelformset_factory
+from .models import UserSkill
+
+
 @login_required
 def manage_skills(request):
-    user = request.user
+    SkillFormSet = modelformset_factory(
+        UserSkill,
+        fields=("skill", "role", "proficiency", "experience_years"),
+        extra=1,
+        can_delete=True
+    )
 
-    # Filter only current user's skills
-    qs = UserSkill.objects.filter(user=user)
-
+    queryset = UserSkill.objects.filter(user=request.user)
     if request.method == "POST":
-        formset = UserSkillFormSet(request.POST, queryset=qs)
-        if formset.is_valid():
-            instances = formset.save(commit=False)
+        formset = SkillFormSet(request.POST, queryset=queryset)
 
-            # Remove deleted ones
+        if formset.is_valid():
+            # Save new or updated skills
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.user = request.user
+                instance.save()
+
+            # Delete those marked for removal
             for obj in formset.deleted_objects:
                 obj.delete()
 
-            # Save new/updated
-            for instance in instances:
-                instance.user = user
-                instance.save()
-
-            return redirect("profile", user.id)
+            return redirect("profile", user_id=request.user.id)
+        else:
+            print(formset.errors)  # Debug line
     else:
-        formset = UserSkillFormSet(queryset=qs)
+        formset = SkillFormSet(queryset=queryset)
 
     return render(request, "manage_skills.html", {"formset": formset})
