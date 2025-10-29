@@ -83,6 +83,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from .models import Category, UserSkill
 
+
 @login_required
 def marketplace_view(request):
     # Get all categories for sidebar
@@ -214,13 +215,13 @@ from django.contrib.auth.decorators import login_required
 def dashboard_view(request):
     user = request.user
 
-    pending_requests = Exchange.objects.filter(user2=user, status="pending").select_related(
-        'user1', 'user1__userprofile', 'skill1', 'skill2'
-    )
+    pending_requests = Exchange.objects.filter(
+        user2=user, status="pending"
+    ).select_related("user1", "user1__userprofile", "skill1", "skill2")
 
     # Calculate profile completion
     profile_completion = 0
-    if hasattr(user, 'userprofile'):
+    if hasattr(user, "userprofile"):
         profile = user.userprofile
         total_fields = 4
         filled_fields = 0
@@ -233,75 +234,97 @@ def dashboard_view(request):
         if profile.certifications:
             filled_fields += 1
         profile_completion = int((filled_fields / total_fields) * 100)
-    
+
     # Get recent activities from actual exchanges
     recent_activities = []
-    recent_exchanges = Exchange.objects.filter(
-        Q(user1=user) | Q(user2=user)
-    ).order_by('-last_updated')[:5].select_related('user1', 'user2', 'skill1', 'skill2')
-    
+    recent_exchanges = (
+        Exchange.objects.filter(Q(user1=user) | Q(user2=user))
+        .order_by("-last_updated")[:5]
+        .select_related("user1", "user2", "skill1", "skill2")
+    )
+
     for exchange in recent_exchanges:
         other_user = exchange.user2 if exchange.user1 == user else exchange.user1
-        other_user_name = other_user.userprofile.full_name if hasattr(other_user, 'userprofile') and other_user.userprofile.full_name else other_user.username
-        
-        if exchange.status == 'active':
+        other_user_name = (
+            other_user.userprofile.full_name
+            if hasattr(other_user, "userprofile") and other_user.userprofile.full_name
+            else other_user.username
+        )
+
+        if exchange.status == "active":
             if exchange.user1 == user:
                 skill_learning = exchange.skill2.name
             else:
                 skill_learning = exchange.skill1.name
-            recent_activities.append({
-                "icon": "fa-handshake",
-                "title": "Active Exchange",
-                "description": f"Learning {skill_learning} with {other_user_name}",
-                "time": f"{(exchange.last_updated).strftime('%b %d, %Y')}"
-            })
-        elif exchange.status == 'pending':
+            recent_activities.append(
+                {
+                    "icon": "fa-handshake",
+                    "title": "Active Exchange",
+                    "description": f"Learning {skill_learning} with {other_user_name}",
+                    "time": f"{(exchange.last_updated).strftime('%b %d, %Y')}",
+                }
+            )
+        elif exchange.status == "pending":
             if exchange.user1 == user:
-                recent_activities.append({
-                    "icon": "fa-clock",
-                    "title": "Exchange Pending",
-                    "description": f"Waiting for {other_user_name} to respond",
-                    "time": f"{(exchange.start_date).strftime('%b %d, %Y')}"
-                })
-        elif exchange.status == 'completed':
-            recent_activities.append({
-                "icon": "fa-check-circle",
-                "title": "Exchange Completed",
-                "description": f"Completed exchange with {other_user_name}",
-                "time": f"{(exchange.last_updated).strftime('%b %d, %Y')}"
-            })
-    
+                recent_activities.append(
+                    {
+                        "icon": "fa-clock",
+                        "title": "Exchange Pending",
+                        "description": f"Waiting for {other_user_name} to respond",
+                        "time": f"{(exchange.start_date).strftime('%b %d, %Y')}",
+                    }
+                )
+        elif exchange.status == "completed":
+            recent_activities.append(
+                {
+                    "icon": "fa-check-circle",
+                    "title": "Exchange Completed",
+                    "description": f"Completed exchange with {other_user_name}",
+                    "time": f"{(exchange.last_updated).strftime('%b %d, %Y')}",
+                }
+            )
+
     # Find potential matches based on complementary skills
-    my_seeking_skills = UserSkill.objects.filter(user=user, role="seek").values_list('skill_id', flat=True)
-    my_offering_skills = UserSkill.objects.filter(user=user, role="offer").values_list('skill_id', flat=True)
-    
+    my_seeking_skills = UserSkill.objects.filter(user=user, role="seek").values_list(
+        "skill_id", flat=True
+    )
+    my_offering_skills = UserSkill.objects.filter(user=user, role="offer").values_list(
+        "skill_id", flat=True
+    )
+
     matches = []
     if my_seeking_skills and my_offering_skills:
         # Find users who offer what I seek and seek what I offer
-        potential_matches = UserSkill.objects.filter(
-            skill_id__in=my_seeking_skills,
-            role="offer"
-        ).exclude(user=user).select_related('user', 'user__userprofile', 'skill')[:10]
-        
+        potential_matches = (
+            UserSkill.objects.filter(skill_id__in=my_seeking_skills, role="offer")
+            .exclude(user=user)
+            .select_related("user", "user__userprofile", "skill")[:10]
+        )
+
         for match_skill in potential_matches:
             other_user = match_skill.user
             # Check if they seek what I offer
             their_seeking = UserSkill.objects.filter(
-                user=other_user,
-                role="seek",
-                skill_id__in=my_offering_skills
+                user=other_user, role="seek", skill_id__in=my_offering_skills
             ).first()
-            
+
             if their_seeking:
-                name = other_user.userprofile.full_name if hasattr(other_user, 'userprofile') and other_user.userprofile.full_name else other_user.username
+                name = (
+                    other_user.userprofile.full_name
+                    if hasattr(other_user, "userprofile")
+                    and other_user.userprofile.full_name
+                    else other_user.username
+                )
                 initials = name[:2].upper() if len(name) >= 2 else name[:1].upper()
-                matches.append({
-                    "initials": initials,
-                    "name": name,
-                    "user_id": other_user.id,
-                    "offer": match_skill.skill.name,
-                    "want": their_seeking.skill.name,
-                })
+                matches.append(
+                    {
+                        "initials": initials,
+                        "name": name,
+                        "user_id": other_user.id,
+                        "offer": match_skill.skill.name,
+                        "want": their_seeking.skill.name,
+                    }
+                )
                 if len(matches) >= 3:
                     break
 
@@ -403,57 +426,61 @@ def manage_skills(request):
 def propose_exchange_view(request, user_skill_id):
     """View to propose a skill exchange with another user."""
     other_user_skill = get_object_or_404(UserSkill, id=user_skill_id, role="offer")
-    
+
     if other_user_skill.user == request.user:
         messages.error(request, "You cannot propose an exchange with yourself!")
         return redirect("marketplace")
-    
+
     my_offered_skills = UserSkill.objects.filter(user=request.user, role="offer")
-    
+
     if request.method == "POST":
         my_skill_id = request.POST.get("my_skill")
         notes = request.POST.get("notes", "")
-        
+
         if not my_skill_id:
             messages.error(request, "Please select a skill you want to offer.")
             return redirect("propose_exchange", user_skill_id=user_skill_id)
-        
-        my_skill = get_object_or_404(UserSkill, id=my_skill_id, user=request.user, role="offer")
-        
+
+        my_skill = get_object_or_404(
+            UserSkill, id=my_skill_id, user=request.user, role="offer"
+        )
+
         exchange = Exchange.objects.create(
             user1=request.user,
             user2=other_user_skill.user,
             skill1=my_skill.skill,
             skill2=other_user_skill.skill,
             status="pending",
-            notes=notes
+            notes=notes,
         )
-        
+
         messages.success(
             request,
-            f"Exchange proposal sent to {other_user_skill.user.userprofile.full_name if hasattr(other_user_skill.user, 'userprofile') else other_user_skill.user.username}!"
+            f"Exchange proposal sent to {other_user_skill.user.userprofile.full_name if hasattr(other_user_skill.user, 'userprofile') else other_user_skill.user.username}!",
         )
         return redirect("dashboard")
-    
+
     context = {
         "other_user_skill": other_user_skill,
         "my_offered_skills": my_offered_skills,
     }
-    
+
     return render(request, "propose_exchange.html", context)
 
 
 @login_required
 def accept_exchange(request, exchange_id):
     """Accept a pending exchange proposal."""
-    exchange = get_object_or_404(Exchange, id=exchange_id, user2=request.user, status="pending")
-    
+    exchange = get_object_or_404(
+        Exchange, id=exchange_id, user2=request.user, status="pending"
+    )
+
     exchange.status = "active"
     exchange.save()
-    
+
     messages.success(
         request,
-        f"Exchange accepted! You can now start learning {exchange.skill1.name} from {exchange.user1.userprofile.full_name if hasattr(exchange.user1, 'userprofile') else exchange.user1.username}."
+        f"Exchange accepted! You can now start learning {exchange.skill1.name} from {exchange.user1.userprofile.full_name if hasattr(exchange.user1, 'userprofile') else exchange.user1.username}.",
     )
     return redirect("dashboard")
 
@@ -461,11 +488,13 @@ def accept_exchange(request, exchange_id):
 @login_required
 def reject_exchange(request, exchange_id):
     """Reject a pending exchange proposal."""
-    exchange = get_object_or_404(Exchange, id=exchange_id, user2=request.user, status="pending")
-    
+    exchange = get_object_or_404(
+        Exchange, id=exchange_id, user2=request.user, status="pending"
+    )
+
     exchange.status = "cancelled"
     exchange.save()
-    
+
     messages.info(request, "Exchange proposal declined.")
     return redirect("dashboard")
 
@@ -474,71 +503,97 @@ from .models import Message
 from django.db.models import Max, OuterRef, Subquery
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404, redirect
+from django.db.models import Q
+from .models import Message
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
 @login_required
-def messages_view(request):
-    """Display list of conversations."""
-    user = request.user
-    
-    # Get all users the current user has had conversations with
-    sent_to = Message.objects.filter(sender=user).values_list('receiver', flat=True).distinct()
-    received_from = Message.objects.filter(receiver=user).values_list('sender', flat=True).distinct()
+def messages_view(request, user_id=None):
+    """Display list of conversations and optionally a selected conversation."""
+    current_user = request.user
+
+    # --- Build conversation list ---
+    sent_to = (
+        Message.objects.filter(sender=current_user)
+        .values_list("receiver", flat=True)
+        .distinct()
+    )
+    received_from = (
+        Message.objects.filter(receiver=current_user)
+        .values_list("sender", flat=True)
+        .distinct()
+    )
     conversation_user_ids = set(list(sent_to) + list(received_from))
-    
+
     conversations = []
-    for user_id in conversation_user_ids:
-        other_user = User.objects.get(id=user_id)
-        
-        # Get last message in conversation
-        last_message = Message.objects.filter(
-            Q(sender=user, receiver=other_user) | Q(sender=other_user, receiver=user)
-        ).order_by('-timestamp').first()
-        
-        # Count unread messages
-        unread_count = Message.objects.filter(
-            sender=other_user, receiver=user, is_read=False
-        ).count()
-        
-        conversations.append({
-            'user': other_user,
-            'last_message': last_message,
-            'unread_count': unread_count
-        })
-    
-    # Sort by last message timestamp
-    conversations.sort(key=lambda x: x['last_message'].timestamp if x['last_message'] else x['user'].date_joined, reverse=True)
-    
-    context = {
-        'conversations': conversations
-    }
-    return render(request, 'messages.html', context)
-
-
-@login_required
-def conversation_view(request, user_id):
-    """Display conversation with a specific user."""
-    other_user = get_object_or_404(User, id=user_id)
-    
-    # Mark messages from other user as read
-    Message.objects.filter(sender=other_user, receiver=request.user, is_read=False).update(is_read=True)
-    
-    # Get all messages between these two users
-    messages_list = Message.objects.filter(
-        Q(sender=request.user, receiver=other_user) | Q(sender=other_user, receiver=request.user)
-    ).order_by('timestamp').select_related('sender', 'receiver')
-    
-    # Handle sending new message
-    if request.method == 'POST':
-        content = request.POST.get('content', '').strip()
-        if content:
-            Message.objects.create(
-                sender=request.user,
-                receiver=other_user,
-                content=content
+    for uid in conversation_user_ids:
+        other_user = User.objects.get(id=uid)
+        last_message = (
+            Message.objects.filter(
+                Q(sender=current_user, receiver=other_user)
+                | Q(sender=other_user, receiver=current_user)
             )
-            return redirect('conversation', user_id=user_id)
-    
+            .order_by("-timestamp")
+            .first()
+        )
+        unread_count = Message.objects.filter(
+            sender=other_user, receiver=current_user, is_read=False
+        ).count()
+        conversations.append(
+            {
+                "user": other_user,
+                "last_message": last_message,
+                "unread_count": unread_count,
+            }
+        )
+
+    # Sort conversations by last message timestamp
+    conversations.sort(
+        key=lambda x: (
+            x["last_message"].timestamp if x["last_message"] else x["user"].date_joined
+        ),
+        reverse=True,
+    )
+
+    # --- Selected conversation (if any) ---
+    selected_user = None
+    messages_list = []
+    if user_id:
+        selected_user = get_object_or_404(User, id=user_id)
+
+        # Mark unread messages as read
+        Message.objects.filter(
+            sender=selected_user, receiver=current_user, is_read=False
+        ).update(is_read=True)
+
+        # Get all messages with this user
+        messages_list = (
+            Message.objects.filter(
+                Q(sender=current_user, receiver=selected_user)
+                | Q(sender=selected_user, receiver=current_user)
+            )
+            .order_by("timestamp")
+            .select_related("sender", "receiver")
+        )
+
+        # Handle sending a new message
+        if request.method == "POST":
+            content = request.POST.get("content", "").strip()
+            if content:
+                Message.objects.create(
+                    sender=current_user, receiver=selected_user, content=content
+                )
+                return redirect("messages_combined", user_id=user_id)
+
     context = {
-        'other_user': other_user,
-        'messages': messages_list
+        "conversations": conversations,
+        "selected_user": selected_user,
+        "messages": messages_list,
     }
-    return render(request, 'conversation.html', context)
+
+    return render(request, "messages.html", context)

@@ -110,7 +110,7 @@
         
         {% if conversations %}
             {% for conv in conversations %}
-            <a href="{% url 'conversation' conv.user.id %}" class="conversation-item">
+            <a href="" class="conversation-item">
                 <div class="d-flex align-items-center">
                     <div class="user-avatar">
                         {% if conv.user.userprofile.full_name %}
@@ -152,7 +152,76 @@
             </div>
         {% endif %}
     </div>
-    
+    <div class="chat-container">
+    <div class="chat-main">
+        <div class="chat-header">
+            <div class="d-flex align-items-center">
+                <a href="{% url 'messages' %}" class="btn btn-link text-dark me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="user-avatar-small me-3">
+                    {% if other_user.userprofile.full_name %}
+                        {{ other_user.userprofile.full_name|slice:":1"|upper }}
+                    {% else %}
+                        {{ other_user.username|slice:":1"|upper }}
+                    {% endif %}
+                </div>
+                <div>
+                    <h5 class="mb-0">
+                        {% if other_user.userprofile.full_name %}
+                            {{ other_user.userprofile.full_name }}
+                        {% else %}
+                            {{ other_user.username }}
+                        {% endif %}
+                    </h5>
+                    <small class="text-muted">
+                        <a href="{% url 'profile' other_user.id %}" class="text-decoration-none">View Profile</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="message {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                    <div>
+                        <div class="message-bubble">
+                            {{ message.content }}
+                        </div>
+                        <div class="message-time {% if message.sender == request.user %}text-end{% endif %}">
+                            {{ message.timestamp|date:"M d, g:i A" }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center text-muted mt-5">
+                    <i class="fas fa-comments fa-3x mb-3" style="opacity: 0.2;"></i>
+                    <p>No messages yet. Start the conversation!</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="chat-input-area">
+            <form method="post" class="chat-input-form">
+                {% csrf_token %}
+                <input 
+                    type="text" 
+                    name="content" 
+                    class="chat-input" 
+                    placeholder="Type a message..." 
+                    required
+                    autocomplete="off"
+                >
+                <button type="submit" class="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
     <div class="empty-state">
         <i class="fas fa-comment-dots"></i>
         <h5>Select a conversation</h5>

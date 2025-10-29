@@ -20,5 +20,5 @@ urlpatterns = [
     path("exchange/accept/<int:exchange_id>/", views.accept_exchange, name="accept_exchange"),
     path("exchange/reject/<int:exchange_id>/", views.reject_exchange, name="reject_exchange"),
     path("messages/", views.messages_view, name="messages"),
-    path("messages/<int:user_id>/", views.conversation_view, name="conversation"),
+    # path("messages/<int:user_id>/", views.conversation_view, name="conversation"),
 ]

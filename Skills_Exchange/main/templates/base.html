@@ -44,7 +44,7 @@
           {% if user.is_authenticated %}
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'messages' or request.resolver_match.url_name == 'conversation' %}active{% endif %}" href="{% url 'messages' %}">
-              <i class="fas fa-comments me-1"></i>Messages
+              Messages
             </a>
           </li>
           {% endif %}
