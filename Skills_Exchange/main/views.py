@@ -187,7 +187,6 @@ def create_profile(request):
     return render(request, "create_profile.html", {"form": form})
 
 
-
 from django.db.models import Q
 from django.shortcuts import render
 from .models import UserProfile, UserSkill, Exchange
@@ -195,32 +194,64 @@ from .models import UserProfile, UserSkill, Exchange
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 
+
 @login_required
 def dashboard_view(request):
     user = request.user
 
     context = {
-        "offered_skills": user.skills_offered.count() if hasattr(user, "skills_offered") else 0,
-        "learning_skills": user.skills_learning.count() if hasattr(user, "skills_learning") else 0,
-        "active_exchanges": 3,  # Example: replace with Exchange.objects.filter(user=user).count()
-        "profile_completion": 85,  # Calculate based on filled profile fields
-
+        "offered_skills": UserSkill.objects.filter(user=user, role="offer").count(),
+        "learning_skills": UserSkill.objects.filter(user=user, role="seek").count(),
+        "active_exchanges": Exchange.objects.filter(
+            Q(user1=user, status="active") | Q(user2=user, status="active")
+        ).count(),
+        "profile_completion": 85,  # Dummy data
         "recent_activities": [
-            {"icon": "fa-handshake", "title": "New Exchange Started", "description": "You began learning Graphic Design from Maria Johnson", "time": "2 hours ago"},
-            {"icon": "fa-star", "title": "Skill Rated", "description": "Alex Smith rated your Web Development teaching 5 stars", "time": "1 day ago"},
-            {"icon": "fa-comment", "title": "New Message", "description": "Carlos Rodriguez sent you a message", "time": "2 days ago"},
+            {
+                "icon": "fa-handshake",
+                "title": "New Exchange Started",
+                "description": "You began learning Graphic Design from Maria Johnson",
+                "time": "2 hours ago",
+            },
+            {
+                "icon": "fa-star",
+                "title": "Skill Rated",
+                "description": "Alex Smith rated your Web Development teaching 5 stars",
+                "time": "1 day ago",
+            },
+            {
+                "icon": "fa-comment",
+                "title": "New Message",
+                "description": "Carlos Rodriguez sent you a message",
+                "time": "2 days ago",
+            },
         ],
-
         "matches": [
-            {"initials": "AS", "name": "Alex Smith", "offer": "Web Development", "want": "UI/UX Design", "percent": 92},
-            {"initials": "MJ", "name": "Maria Johnson", "offer": "Public Speaking", "want": "Graphic Design", "percent": 88},
-            {"initials": "CR", "name": "Carlos Rodriguez", "offer": "Spanish", "want": "Photography", "percent": 79},
+            {
+                "initials": "AS",
+                "name": "Alex Smith",
+                "offer": "Web Development",
+                "want": "UI/UX Design",
+                "percent": 92,
+            },
+            {
+                "initials": "MJ",
+                "name": "Maria Johnson",
+                "offer": "Public Speaking",
+                "want": "Graphic Design",
+                "percent": 88,
+            },
+            {
+                "initials": "CR",
+                "name": "Carlos Rodriguez",
+                "offer": "Spanish",
+                "want": "Photography",
+                "percent": 79,
+            },
         ],
     }
 
     return render(request, "dashboard.html", context)
-
-
 
 
 @login_required
@@ -275,7 +306,7 @@ def manage_skills(request):
         UserSkill,
         fields=("skill", "role", "proficiency", "experience_years"),
         extra=1,
-        can_delete=True
+        can_delete=True,
     )
 
     queryset = UserSkill.objects.filter(user=request.user)
