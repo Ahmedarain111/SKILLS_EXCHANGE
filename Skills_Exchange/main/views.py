@@ -187,87 +187,40 @@ def create_profile(request):
     return render(request, "create_profile.html", {"form": form})
 
 
+
+from django.db.models import Q
+from django.shortcuts import render
+from .models import UserProfile, UserSkill, Exchange
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
 @login_required
 def dashboard_view(request):
     user = request.user
 
-    profile = UserProfile.objects.filter(user=user).first()
-
-    skills_have_count = UserSkill.objects.filter(user=user, skill_type="teach").count()
-    skills_want_count = UserSkill.objects.filter(user=user, skill_type="learn").count()
-    active_exchanges_count = Exchange.objects.filter(
-        Q(user1=user) | Q(user2=user), status="active"
-    ).count()
-
-    if profile:
-        fields = [profile.full_name, profile.bio, profile.location]
-        completion_fields = sum(bool(f) for f in fields)
-        total_fields = len(fields)
-        profile_completion = int((completion_fields / total_fields) * 100)
-    else:
-        profile_completion = 0
-
-    recent_exchanges = Exchange.objects.filter(Q(user1=user) | Q(user2=user)).order_by(
-        "-start_date"
-    )[:5]
-
-    recent_activity = []
-    for ex in recent_exchanges:
-        partner = ex.user2 if ex.user1 == user else ex.user1
-        skill_you_give = ex.skill1 if ex.user1 == user else ex.skill2
-        skill_you_get = ex.skill2 if ex.user1 == user else ex.skill1
-        recent_activity.append(
-            {
-                "icon": "fas fa-handshake",
-                "title": (
-                    "Exchange Started"
-                    if ex.status == "active"
-                    else ex.get_status_display()
-                ),
-                "desc": f"With {partner.username}: {skill_you_give} ↔ {skill_you_get}",
-                "time": ex.start_date.strftime("%b %d, %Y"),
-            }
-        )
-
-    your_teach_skills = UserSkill.objects.filter(
-        user=user, skill_type="teach"
-    ).values_list("skill", flat=True)
-    your_learn_skills = UserSkill.objects.filter(
-        user=user, skill_type="learn"
-    ).values_list("skill", flat=True)
-
-    matches = []
-    if your_teach_skills.exists() or your_learn_skills.exists():
-        potential_users = (
-            UserSkill.objects.exclude(user=user)
-            .filter(
-                Q(skill__in=your_learn_skills, skill_type="teach")
-                | Q(skill__in=your_teach_skills, skill_type="learn")
-            )
-            .select_related("user", "skill")
-            .distinct()[:4]
-        )
-
-        for us in potential_users:
-            matches.append(
-                {
-                    "initials": us.user.username[:2].upper(),
-                    "name": us.user.get_full_name() or us.user.username,
-                    "exchange": f"{us.skill.name}",
-                }
-            )
-
     context = {
-        "profile": profile,
-        "skills_have_count": skills_have_count,
-        "skills_want_count": skills_want_count,
-        "active_exchanges_count": active_exchanges_count,
-        "profile_completion": profile_completion,
-        "recent_activity": recent_activity,
-        "matches": matches,
+        "offered_skills": user.skills_offered.count() if hasattr(user, "skills_offered") else 0,
+        "learning_skills": user.skills_learning.count() if hasattr(user, "skills_learning") else 0,
+        "active_exchanges": 3,  # Example: replace with Exchange.objects.filter(user=user).count()
+        "profile_completion": 85,  # Calculate based on filled profile fields
+
+        "recent_activities": [
+            {"icon": "fa-handshake", "title": "New Exchange Started", "description": "You began learning Graphic Design from Maria Johnson", "time": "2 hours ago"},
+            {"icon": "fa-star", "title": "Skill Rated", "description": "Alex Smith rated your Web Development teaching 5 stars", "time": "1 day ago"},
+            {"icon": "fa-comment", "title": "New Message", "description": "Carlos Rodriguez sent you a message", "time": "2 days ago"},
+        ],
+
+        "matches": [
+            {"initials": "AS", "name": "Alex Smith", "offer": "Web Development", "want": "UI/UX Design", "percent": 92},
+            {"initials": "MJ", "name": "Maria Johnson", "offer": "Public Speaking", "want": "Graphic Design", "percent": 88},
+            {"initials": "CR", "name": "Carlos Rodriguez", "offer": "Spanish", "want": "Photography", "percent": 79},
+        ],
     }
 
     return render(request, "dashboard.html", context)
+
+
 
 
 @login_required

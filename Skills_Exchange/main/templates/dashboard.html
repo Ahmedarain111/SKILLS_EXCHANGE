@@ -1,209 +1,121 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | SkillSwap</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <style>
-        .dashboard-links li { margin-left: 10px !important; }
-        .stat-card {
-            background: #f8fafc;
-            border-radius: 12px;
-            text-align: center;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .stat-number {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #2563EB;
-        }
-        .activity-item, .match-item {
-            display: flex;
-            align-items: flex-start;
-            background: #fff;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.05);
-        }
-        .activity-icon, .user-avatar-small {
-            background: #2563EB;
-            color: white;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
-        .match-percentage {
-            font-size: 0.9rem;
-            color: #2563EB;
-            font-weight: 600;
-        }
-        .quick-action {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 120px;
-            height: 100px;
-            background: #f8fafc;
-            border-radius: 12px;
-            text-decoration: none;
-            color: #1E293B;
-            font-weight: 500;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.05);
-            transition: all 0.2s ease;
-        }
-        .quick-action:hover {
-            background: #2563EB;
-            color: white;
-            transform: translateY(-3px);
-        }
-        .quick-action i { font-size: 1.4rem; margin-bottom: 6px; }
-        @media (max-width: 768px) {
-            .quick-actions { flex-wrap: wrap; justify-content: center; }
-            .quick-action { width: 45%; margin-bottom: 10px; }
-        }
-    </style>
-</head>
-<body>
-<header>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container">
-            <a class="navbar-brand logo" href="/">Skill<span>Swap</span></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto nav-links dashboard-links">
-                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/marketplace/">Marketplace</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="/dashboard/">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/messages/">Messages</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/exchanges/">Exchanges</a></li>
-                </ul>
-                <div class="user-menu">
-                    <div class="user-avatar">{{ user.first_name|default:user.username|slice:":2"|upper }}</div>
-                </div>
-            </div>
-        </div>
-    </nav>
-</header>
 
+{% block title %}Dashboard | SkillSwap{% endblock title %}
+
+{% block content %}
 <div class="container mt-5">
+    <!-- Welcome Section -->
     <div class="row mb-4 align-items-center">
         <div class="col-md-6">
-            <h1>Welcome back, {{ profile.full_name|default:user.username }}!</h1>
+            <h1>Welcome back, {{ user.first_name|default:user.username }}!</h1>
         </div>
         <div class="col-md-6 text-md-end">
-            <a href="/marketplace/" class="btn btn-primary">Browse Skills</a>
+            <a href="{% url 'marketplace' %}" class="btn btn-primary">Browse Skills</a>
         </div>
     </div>
 
-    <div class="row mb-5">
+    <!-- Stats Cards -->
+    <div class="row mb-5 text-center">
         <div class="col-sm-6 col-lg-3 mb-3">
-            <div class="stat-card">
-                <div class="stat-number">{{ active_exchanges_count }}</div>
+            <div class="stat-card p-4 shadow-sm rounded bg-white">
+                <div class="stat-number h3">{{ active_exchanges }}</div>
                 <p>Active Exchanges</p>
             </div>
         </div>
         <div class="col-sm-6 col-lg-3 mb-3">
-            <div class="stat-card">
-                <div class="stat-number">{{ skills_have_count }}</div>
+            <div class="stat-card p-4 shadow-sm rounded bg-white">
+                <div class="stat-number h3">{{ offered_skills }}</div>
                 <p>Skills Offered</p>
             </div>
         </div>
         <div class="col-sm-6 col-lg-3 mb-3">
-            <div class="stat-card">
-                <div class="stat-number">{{ skills_want_count }}</div>
+            <div class="stat-card p-4 shadow-sm rounded bg-white">
+                <div class="stat-number h3">{{ learning_skills }}</div>
                 <p>Skills Learning</p>
             </div>
         </div>
         <div class="col-sm-6 col-lg-3 mb-3">
-            <div class="stat-card">
-                <div class="stat-number">{{ profile_completion }}%</div>
+            <div class="stat-card p-4 shadow-sm rounded bg-white">
+                <div class="stat-number h3">{{ profile_completion }}%</div>
                 <p>Profile Complete</p>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <!-- Left side -->
+        <!-- Left Column -->
         <div class="col-lg-8 mb-4">
-            <div class="activity-card mb-4 p-3 bg-light rounded">
-                <h2>Recent Activity</h2>
-                {% if recent_activity %}
-                    {% for item in recent_activity %}
-                    <div class="activity-item">
-                        <div class="activity-icon"><i class="{{ item.icon }}"></i></div>
+            <!-- Recent Activity -->
+            <div class="activity-card mb-4 p-4 shadow-sm rounded bg-white">
+                <h2 class="mb-3">Recent Activity</h2>
+                {% if recent_activities %}
+                    {% for activity in recent_activities %}
+                    <div class="activity-item d-flex mb-3">
+                        <div class="activity-icon me-3">
+                            <i class="fas {{ activity.icon }} fa-lg text-primary"></i>
+                        </div>
                         <div class="activity-info">
-                            <h5>{{ item.title }}</h5>
-                            <p>{{ item.desc }}</p>
-                            <span class="text-muted small">{{ item.time }}</span>
+                            <h5>{{ activity.title }}</h5>
+                            <p class="text-muted mb-1">{{ activity.description }}</p>
+                            <small class="text-secondary">{{ activity.time }}</small>
                         </div>
                     </div>
                     {% endfor %}
                 {% else %}
-                    <p class="text-muted mt-3">No recent activity yet.</p>
+                    <p class="text-muted">No recent activity yet.</p>
                 {% endif %}
             </div>
 
-            <div class="quick-actions-card bg-white p-3 rounded shadow-sm">
-                <h2>Quick Actions</h2>
-                <div class="d-flex gap-3 flex-wrap quick-actions mt-3">
-                    <a href="/profile/" class="quick-action">
-                        <i class="fas fa-user-edit"></i>Edit Profile
+            <!-- Quick Actions -->
+            <div class="quick-actions-card p-4 shadow-sm rounded bg-white">
+                <h2 class="mb-3">Quick Actions</h2>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="" class="btn btn-outline-primary">
+                        <i class="fas fa-user-edit me-2"></i>Edit Profile
                     </a>
-                    <a href="/marketplace/" class="quick-action">
-                        <i class="fas fa-search"></i>Find Skills
+                    <a href="{% url 'marketplace' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-search me-2"></i>Find Skills
                     </a>
-                    <a href="/profile/" class="quick-action">
-                        <i class="fas fa-plus"></i>Add Skill
+                    <a href="{% url 'manage_skills' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-2"></i>Add Skill
                     </a>
-                    <a href="/messages/" class="quick-action">
-                        <i class="fas fa-envelope"></i>Messages
+                    <a href="" class="btn btn-outline-primary">
+                        <i class="fas fa-envelope me-2"></i>Messages
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- Right side -->
+        <!-- Right Column -->
         <div class="col-lg-4">
-            <div class="matches-card bg-white p-3 rounded shadow-sm">
-                <h2>Magic Matches</h2>
+            <div class="matches-card p-4 shadow-sm rounded bg-white">
+                <h2 class="mb-3">Magic Matches</h2>
                 {% if matches %}
                     {% for match in matches %}
-                    <div class="match-item">
-                        <div class="user-avatar-small">{{ match.initials }}</div>
+                    <div class="match-item d-flex align-items-center mb-3">
+                        <div class="user-avatar-small bg-primary text-white rounded-circle me-3 d-flex justify-content-center align-items-center" style="width:40px;height:40px;">
+                            {{ match.initials }}
+                        </div>
                         <div class="match-info">
-                            <h5>{{ match.name }}</h5>
-                            <p>{{ match.exchange }}</p>
-                            <span class="match-percentage">Potential Match</span>
+                            <h5 class="mb-0">{{ match.name }}</h5>
+                            <p class="text-muted small mb-1">{{ match.offer }} ↔ {{ match.want }}</p>
+                            <small class="text-primary">{{ match.percent }}% Match</small>
                         </div>
                     </div>
                     {% endfor %}
                 {% else %}
-                    <p class="text-muted mt-3">No matches found yet.</p>
+                    <p class="text-muted">No matches found yet.</p>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<footer class="mt-5 bg-light pt-4 pb-2 text-center">
-    <p>&copy; 2025 SkillSwap. All rights reserved.</p>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<style>
+    .stat-card p { color: #6b7280; margin-bottom: 0; }
+    .activity-card h2, .quick-actions-card h2, .matches-card h2 { font-size: 1.25rem; }
+    .activity-item i { width: 40px; text-align: center; }
+    .quick-actions a { text-decoration: none; }
+</style>
+{% endblock content %}
