@@ -154,22 +154,27 @@
         <!-- Right Column -->
         <div class="col-lg-4">
             <div class="matches-card p-4 shadow-sm rounded bg-white">
-                <h2 class="mb-3">Magic Matches</h2>
+                <h2 class="mb-3">Recommended Matches</h2>
                 {% if matches %}
                     {% for match in matches %}
-                    <div class="match-item d-flex align-items-center mb-3">
+                    <div class="match-item d-flex align-items-center mb-3 pb-3 border-bottom">
                         <div class="user-avatar-small bg-primary text-white rounded-circle me-3 d-flex justify-content-center align-items-center" style="width:40px;height:40px;">
                             {{ match.initials }}
                         </div>
-                        <div class="match-info">
+                        <div class="match-info flex-grow-1">
                             <h5 class="mb-0">{{ match.name }}</h5>
                             <p class="text-muted small mb-1">{{ match.offer }} ↔ {{ match.want }}</p>
-                            <small class="text-primary">{{ match.percent }}% Match</small>
+                            <a href="{% url 'profile' match.user_id %}" class="btn btn-sm btn-outline-primary mt-1">
+                                <i class="fas fa-user me-1"></i>View
+                            </a>
                         </div>
                     </div>
                     {% endfor %}
                 {% else %}
-                    <p class="text-muted">No matches found yet.</p>
+                    <p class="text-muted">
+                        No matches found yet. 
+                        <a href="{% url 'manage_skills' %}">Add skills</a> you want to learn and offer to find matches!
+                    </p>
                 {% endif %}
             </div>
         </div>

@@ -218,6 +218,93 @@ def dashboard_view(request):
         'user1', 'user1__userprofile', 'skill1', 'skill2'
     )
 
+    # Calculate profile completion
+    profile_completion = 0
+    if hasattr(user, 'userprofile'):
+        profile = user.userprofile
+        total_fields = 4
+        filled_fields = 0
+        if profile.full_name:
+            filled_fields += 1
+        if profile.bio:
+            filled_fields += 1
+        if profile.location:
+            filled_fields += 1
+        if profile.certifications:
+            filled_fields += 1
+        profile_completion = int((filled_fields / total_fields) * 100)
+    
+    # Get recent activities from actual exchanges
+    recent_activities = []
+    recent_exchanges = Exchange.objects.filter(
+        Q(user1=user) | Q(user2=user)
+    ).order_by('-last_updated')[:5].select_related('user1', 'user2', 'skill1', 'skill2')
+    
+    for exchange in recent_exchanges:
+        other_user = exchange.user2 if exchange.user1 == user else exchange.user1
+        other_user_name = other_user.userprofile.full_name if hasattr(other_user, 'userprofile') and other_user.userprofile.full_name else other_user.username
+        
+        if exchange.status == 'active':
+            if exchange.user1 == user:
+                skill_learning = exchange.skill2.name
+            else:
+                skill_learning = exchange.skill1.name
+            recent_activities.append({
+                "icon": "fa-handshake",
+                "title": "Active Exchange",
+                "description": f"Learning {skill_learning} with {other_user_name}",
+                "time": f"{(exchange.last_updated).strftime('%b %d, %Y')}"
+            })
+        elif exchange.status == 'pending':
+            if exchange.user1 == user:
+                recent_activities.append({
+                    "icon": "fa-clock",
+                    "title": "Exchange Pending",
+                    "description": f"Waiting for {other_user_name} to respond",
+                    "time": f"{(exchange.start_date).strftime('%b %d, %Y')}"
+                })
+        elif exchange.status == 'completed':
+            recent_activities.append({
+                "icon": "fa-check-circle",
+                "title": "Exchange Completed",
+                "description": f"Completed exchange with {other_user_name}",
+                "time": f"{(exchange.last_updated).strftime('%b %d, %Y')}"
+            })
+    
+    # Find potential matches based on complementary skills
+    my_seeking_skills = UserSkill.objects.filter(user=user, role="seek").values_list('skill_id', flat=True)
+    my_offering_skills = UserSkill.objects.filter(user=user, role="offer").values_list('skill_id', flat=True)
+    
+    matches = []
+    if my_seeking_skills and my_offering_skills:
+        # Find users who offer what I seek and seek what I offer
+        potential_matches = UserSkill.objects.filter(
+            skill_id__in=my_seeking_skills,
+            role="offer"
+        ).exclude(user=user).select_related('user', 'user__userprofile', 'skill')[:10]
+        
+        for match_skill in potential_matches:
+            other_user = match_skill.user
+            # Check if they seek what I offer
+            their_seeking = UserSkill.objects.filter(
+                user=other_user,
+                role="seek",
+                skill_id__in=my_offering_skills
+            ).first()
+            
+            if their_seeking:
+                name = other_user.userprofile.full_name if hasattr(other_user, 'userprofile') and other_user.userprofile.full_name else other_user.username
+                initials = name[:2].upper() if len(name) >= 2 else name[:1].upper()
+                matches.append({
+                    "initials": initials,
+                    "name": name,
+                    "user_id": other_user.id,
+                    "offer": match_skill.skill.name,
+                    "want": their_seeking.skill.name,
+                })
+                if len(matches) >= 3:
+                    break
+
     context = {
         "offered_skills": UserSkill.objects.filter(user=user, role="offer").count(),
         "learning_skills": UserSkill.objects.filter(user=user, role="seek").count(),
@@ -225,50 +312,9 @@ def dashboard_view(request):
             Q(user1=user, status="active") | Q(user2=user, status="active")
         ).count(),
         "pending_requests": pending_requests,
-        "profile_completion": 85,
-        "recent_activities": [
-            {
-                "icon": "fa-handshake",
-                "title": "New Exchange Started",
-                "description": "You began learning Graphic Design from Maria Johnson",
-                "time": "2 hours ago",
-            },
-            {
-                "icon": "fa-star",
-                "title": "Skill Rated",
-                "description": "Alex Smith rated your Web Development teaching 5 stars",
-                "time": "1 day ago",
-            },
-            {
-                "icon": "fa-comment",
-                "title": "New Message",
-                "description": "Carlos Rodriguez sent you a message",
-                "time": "2 days ago",
-            },
-        ],
-        "matches": [
-            {
-                "initials": "AS",
-                "name": "Alex Smith",
-                "offer": "Web Development",
-                "want": "UI/UX Design",
-                "percent": 92,
-            },
-            {
-                "initials": "MJ",
-                "name": "Maria Johnson",
-                "offer": "Public Speaking",
-                "want": "Graphic Design",
-                "percent": 88,
-            },
-            {
-                "initials": "CR",
-                "name": "Carlos Rodriguez",
-                "offer": "Spanish",
-                "want": "Photography",
-                "percent": 79,
-            },
-        ],
+        "profile_completion": profile_completion,
+        "recent_activities": recent_activities,
+        "matches": matches,
     }
 
     return render(request, "dashboard.html", context)
