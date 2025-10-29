@@ -468,3 +468,77 @@ def reject_exchange(request, exchange_id):
     
     messages.info(request, "Exchange proposal declined.")
     return redirect("dashboard")
+
+
+from .models import Message
+from django.db.models import Max, OuterRef, Subquery
+
+
+@login_required
+def messages_view(request):
+    """Display list of conversations."""
+    user = request.user
+    
+    # Get all users the current user has had conversations with
+    sent_to = Message.objects.filter(sender=user).values_list('receiver', flat=True).distinct()
+    received_from = Message.objects.filter(receiver=user).values_list('sender', flat=True).distinct()
+    conversation_user_ids = set(list(sent_to) + list(received_from))
+    
+    conversations = []
+    for user_id in conversation_user_ids:
+        other_user = User.objects.get(id=user_id)
+        
+        # Get last message in conversation
+        last_message = Message.objects.filter(
+            Q(sender=user, receiver=other_user) | Q(sender=other_user, receiver=user)
+        ).order_by('-timestamp').first()
+        
+        # Count unread messages
+        unread_count = Message.objects.filter(
+            sender=other_user, receiver=user, is_read=False
+        ).count()
+        
+        conversations.append({
+            'user': other_user,
+            'last_message': last_message,
+            'unread_count': unread_count
+        })
+    
+    # Sort by last message timestamp
+    conversations.sort(key=lambda x: x['last_message'].timestamp if x['last_message'] else x['user'].date_joined, reverse=True)
+    
+    context = {
+        'conversations': conversations
+    }
+    return render(request, 'messages.html', context)
+
+
+@login_required
+def conversation_view(request, user_id):
+    """Display conversation with a specific user."""
+    other_user = get_object_or_404(User, id=user_id)
+    
+    # Mark messages from other user as read
+    Message.objects.filter(sender=other_user, receiver=request.user, is_read=False).update(is_read=True)
+    
+    # Get all messages between these two users
+    messages_list = Message.objects.filter(
+        Q(sender=request.user, receiver=other_user) | Q(sender=other_user, receiver=request.user)
+    ).order_by('timestamp').select_related('sender', 'receiver')
+    
+    # Handle sending new message
+    if request.method == 'POST':
+        content = request.POST.get('content', '').strip()
+        if content:
+            Message.objects.create(
+                sender=request.user,
+                receiver=other_user,
+                content=content
+            )
+            return redirect('conversation', user_id=user_id)
+    
+    context = {
+        'other_user': other_user,
+        'messages': messages_list
+    }
+    return render(request, 'conversation.html', context)

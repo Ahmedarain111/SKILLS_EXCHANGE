@@ -108,6 +108,14 @@
                 <p class="text-secondary small">{{ profile.bio }}</p>
             {% endif %}
             <p class="text-muted small">Joined {{ profile_user.date_joined|date:"F Y" }}</p>
+            
+            {% if user.is_authenticated and user != profile_user %}
+            <div class="mt-3">
+                <a href="{% url 'conversation' profile_user.id %}" class="btn btn-primary">
+                    <i class="fas fa-envelope me-2"></i>Send Message
+                </a>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Offered Skills -->
