@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.admin.views.decorators import staff_member_required
+from django.views.decorators.http import require_POST
 from django.db.models import Q
 from django.forms import modelformset_factory
 from django.core.validators import validate_email
@@ -140,13 +141,16 @@ def marketplace_view(request):
 @staff_member_required
 def admin_dashboard(request):
     total_users = User.objects.count()
+    active_exchanges = Exchange.objects.filter(status="active").count()
+    pending_exchanges = Exchange.objects.filter(status="pending").count()
+    completed_exchanges = Exchange.objects.filter(status="completed").count()
     recent_users = User.objects.order_by("-date_joined")[:5]
 
     context = {
         "total_users": total_users,
-        "active_exchanges": 0,
-        "pending_issues": 0,
-        "completed_exchanges": 0,
+        "active_exchanges": active_exchanges,
+        "pending_issues": pending_exchanges,
+        "completed_exchanges": completed_exchanges,
         "recent_users": recent_users,
     }
     return render(request, "admin_dashboard.html", context)
@@ -156,18 +160,69 @@ def admin_dashboard(request):
 def admin_users(request):
     query = request.GET.get("q", "")
     if query:
-        users = User.objects.filter(username__icontains=query)
+        users = User.objects.filter(
+            Q(username__icontains=query) | Q(email__icontains=query) | Q(first_name__icontains=query)
+        ).order_by("-date_joined")
     else:
-        users = User.objects.all()
+        users = User.objects.all().order_by("-date_joined")
     return render(request, "admin_users.html", {"users": users})
 
 
 @staff_member_required
 def admin_exchanges(request):
+    status_filter = request.GET.get("status", "all")
+    
     exchanges = Exchange.objects.all().select_related(
         "user1", "user2", "user1__userprofile", "user2__userprofile", "skill1", "skill2"
     )
-    return render(request, "admin_exchanges.html", {"exchanges": exchanges})
+    
+    if status_filter and status_filter != "all":
+        exchanges = exchanges.filter(status=status_filter)
+    
+    exchanges = exchanges.order_by("-start_date")
+    
+    context = {
+        "exchanges": exchanges,
+        "status_filter": status_filter,
+    }
+    return render(request, "admin_exchanges.html", context)
+
+
+@staff_member_required
+@require_POST
+def admin_delete_user(request, user_id):
+    """Delete a user (POST only for CSRF protection)"""
+    user_to_delete = get_object_or_404(User, id=user_id)
+    
+    # Prevent deleting yourself
+    if user_to_delete == request.user:
+        messages.error(request, "You cannot delete your own account!")
+        return redirect("admin_users")
+    
+    username = user_to_delete.username
+    user_to_delete.delete()
+    messages.success(request, f"User '{username}' has been deleted successfully.")
+    return redirect("admin_users")
+
+
+@staff_member_required
+@require_POST
+def admin_toggle_staff(request, user_id):
+    """Toggle user staff status (POST only for CSRF protection)"""
+    user_to_toggle = get_object_or_404(User, id=user_id)
+    
+    # Prevent removing your own staff status
+    if user_to_toggle == request.user:
+        messages.error(request, "You cannot change your own staff status!")
+        return redirect("admin_users")
+    
+    user_to_toggle.is_staff = not user_to_toggle.is_staff
+    user_to_toggle.is_superuser = user_to_toggle.is_staff
+    user_to_toggle.save()
+    
+    status = "Admin" if user_to_toggle.is_staff else "Regular User"
+    messages.success(request, f"User '{user_to_toggle.username}' is now a {status}.")
+    return redirect("admin_users")
 
 
 @login_required
