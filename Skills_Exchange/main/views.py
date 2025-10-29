@@ -588,7 +588,7 @@ def messages_view(request, user_id=None):
                 Message.objects.create(
                     sender=current_user, receiver=selected_user, content=content
                 )
-                return redirect("messages_combined", user_id=user_id)
+                return redirect("conversation", user_id=user_id)
 
     context = {
         "conversations": conversations,
