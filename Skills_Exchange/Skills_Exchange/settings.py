@@ -1,4 +1,3 @@
-import os
 """
 Django settings for Skills_Exchange project.
 
@@ -11,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -21,12 +21,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-c4pwn76*j1pqk(ti%d-qe9&5@4)&qi$1-h(qs2i#_=3n_0m2!3'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-c4pwn76*j1pqk(ti%d-qe9&5@4)&qi$1-h(qs2i#_=3n_0m2!3')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+# Allow all hosts for Replit development environment
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -56,8 +57,7 @@ ROOT_URLCONF = 'Skills_Exchange.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        "DIRS": [BASE_DIR / "main" / "templates"],
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "main" / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -121,7 +121,23 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'main', 'static'),
 ]
+
+# Media files (user uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Login redirect
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'marketplace'
+
+# Security settings for iframe embedding (Replit preview)
+X_FRAME_OPTIONS = 'ALLOWALL'
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.replit.dev',
+    'https://*.repl.co',
+]
