@@ -472,11 +472,11 @@ def start_exchange(request, user_id, skill_id):
     current_user = request.user
 
     teach_skill = UserSkill.objects.filter(
-        user=current_user, skill_type="teach"
+        user=current_user, role="offer"
     ).first()
     if not teach_skill:
         messages.error(
-            request, "You must add a teaching skill before starting an exchange."
+            request, "You must add a skill you can offer before starting an exchange."
         )
         return redirect("dashboard")
 

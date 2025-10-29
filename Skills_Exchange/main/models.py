@@ -65,6 +65,11 @@ class UserSkill(models.Model):
 
     class Meta:
         unique_together = ("user", "skill", "role")
+        indexes = [
+            models.Index(fields=["role"]),
+            models.Index(fields=["proficiency"]),
+            models.Index(fields=["user", "role"]),
+        ]
 
     def __str__(self):
         return f"{self.user.username} - {self.skill.name} ({self.role})"
@@ -110,6 +115,12 @@ class Exchange(models.Model):
         ordering = ["-start_date"]
         verbose_name = "Exchange"
         verbose_name_plural = "Exchanges"
+        indexes = [
+            models.Index(fields=["status"]),
+            models.Index(fields=["user1", "status"]),
+            models.Index(fields=["user2", "status"]),
+            models.Index(fields=["-start_date"]),
+        ]
 
 
 class Message(models.Model):
@@ -129,6 +140,12 @@ class Message(models.Model):
 
     class Meta:
         ordering = ["timestamp"]
+        indexes = [
+            models.Index(fields=["timestamp"]),
+            models.Index(fields=["is_read"]),
+            models.Index(fields=["receiver", "is_read"]),
+            models.Index(fields=["sender", "receiver"]),
+        ]
 
     def __str__(self):
         return f"{self.sender.username} -> {self.receiver.username}: {self.content[:30]}"

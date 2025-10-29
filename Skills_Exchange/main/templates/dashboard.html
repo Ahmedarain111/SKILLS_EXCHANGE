@@ -135,7 +135,7 @@
             <div class="quick-actions-card p-4 shadow-sm rounded bg-white">
                 <h2 class="mb-3">Quick Actions</h2>
                 <div class="d-flex flex-wrap gap-3">
-                    <a href="" class="btn btn-outline-primary">
+                    <a href="{% url 'profile' user.id %}" class="btn btn-outline-primary">
                         <i class="fas fa-user-edit me-2"></i>Edit Profile
                     </a>
                     <a href="{% url 'marketplace' %}" class="btn btn-outline-primary">
