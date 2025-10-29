@@ -122,36 +122,51 @@
         </div>
 
         <!-- Offered Skills -->
-        <div class="profile-card skill-section">
-            <h4><i class="fa-solid fa-handshake me-2"></i>Skills Offered</h4>
-            {% if offered_skills %}
-                {% for skill in offered_skills %}
-                    <span class="skill-badge">
-                        {{ skill.skill.name }}
-                        {% if skill.proficiency %} — {{ skill.proficiency|title }}{% endif %}
-                        {% if skill.experience_years %} ({{ skill.experience_years }} yrs){% endif %}
-                    </span>
-                {% endfor %}
-            {% else %}
-                <p class="text-muted">No offered skills yet.</p>
+<div class="profile-card skill-section">
+    <h4><i class="fa-solid fa-handshake me-2"></i>Skills Offered</h4>
+    {% if offered_skills %}
+        {% for skill in offered_skills %}
+            <span class="skill-badge">
+                {{ skill.skill.name }}
+                {% if skill.proficiency %} — {{ skill.proficiency|title }}{% endif %}
+                {% if skill.experience_years %} ({{ skill.experience_years }} yrs){% endif %}
+            </span>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">
+            No offered skills yet.
+            {% if user == profile_user %}
+                <a href="{% url 'manage_skills' %}" class="ms-2 text-decoration-none text-primary fw-semibold">
+                    Add some now →
+                </a>
             {% endif %}
-        </div>
+        </p>
+    {% endif %}
+</div>
 
-        <!-- Wanted Skills -->
-        <div class="profile-card skill-section">
-            <h4><i class="fa-solid fa-lightbulb me-2 text-warning"></i>Skills Wanted</h4>
-            {% if wanted_skills %}
-                {% for skill in wanted_skills %}
-                    <span class="skill-badge bg-success-subtle text-success border border-success">
-                        {{ skill.skill.name }}
-                        {% if skill.proficiency %} — {{ skill.proficiency|title }}{% endif %}
-                        {% if skill.experience_years %} ({{ skill.experience_years }} yrs){% endif %}
-                    </span>
-                {% endfor %}
-            {% else %}
-                <p class="text-muted">No wanted skills yet.</p>
+<!-- Wanted Skills -->
+<div class="profile-card skill-section">
+    <h4><i class="fa-solid fa-lightbulb me-2 text-warning"></i>Skills Wanted</h4>
+    {% if wanted_skills %}
+        {% for skill in wanted_skills %}
+            <span class="skill-badge bg-success-subtle text-success border border-success">
+                {{ skill.skill.name }}
+                {% if skill.proficiency %} — {{ skill.proficiency|title }}{% endif %}
+                {% if skill.experience_years %} ({{ skill.experience_years }} yrs){% endif %}
+            </span>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">
+            No wanted skills yet.
+            {% if user == profile_user %}
+                <a href="{% url 'manage_skills' %}" class="ms-2 text-decoration-none text-primary fw-semibold">
+                    Add some now →
+                </a>
             {% endif %}
-        </div>
+        </p>
+    {% endif %}
+</div>
+
 
         {% if profile.certifications %}
             <div class="profile-card text-center">

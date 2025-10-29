@@ -297,3 +297,35 @@ def start_exchange(request, user_id, skill_id):
         request, f"Exchange request sent to {other_user_skill.user.username}!"
     )
     return redirect("dashboard")
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import UserSkill
+from .forms import UserSkillFormSet
+
+@login_required
+def manage_skills(request):
+    user = request.user
+
+    # Filter only current user's skills
+    qs = UserSkill.objects.filter(user=user)
+
+    if request.method == "POST":
+        formset = UserSkillFormSet(request.POST, queryset=qs)
+        if formset.is_valid():
+            instances = formset.save(commit=False)
+
+            # Remove deleted ones
+            for obj in formset.deleted_objects:
+                obj.delete()
+
+            # Save new/updated
+            for instance in instances:
+                instance.user = user
+                instance.save()
+
+            return redirect("profile", user.id)
+    else:
+        formset = UserSkillFormSet(queryset=qs)
+
+    return render(request, "manage_skills.html", {"formset": formset})

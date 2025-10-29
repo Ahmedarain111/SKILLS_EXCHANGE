@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Manage Skills | SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="text-center mb-4">Manage Your Skills</h2>
+
+    <div class="row justify-content-center">
+        <div class="col-md-9 bg-white p-4 shadow-sm rounded">
+
+            <form method="post">
+                {% csrf_token %}
+                {{ formset.management_form }}
+
+                <table class="table align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Skill</th>
+                            <th>Role</th>
+                            <th>Proficiency</th>
+                            <th>Experience (years)</th>
+                            <th>Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in formset %}
+                        <tr>
+                            <td>{{ form.skill }}</td>
+                            <td>{{ form.role }}</td>
+                            <td>{{ form.proficiency }}</td>
+                            <td>{{ form.experience_years }}</td>
+                            <td>{{ form.DELETE }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <button type="button" class="btn btn-outline-primary" id="add-skill">+ Add Skill</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('add-skill').addEventListener('click', function() {
+    const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+    const currentCount = parseInt(totalForms.value);
+    const newForm = document.querySelector('tbody tr').cloneNode(true);
+
+    newForm.querySelectorAll('input, select').forEach(input => {
+        input.name = input.name.replace(/-(\d+)-/, `-${currentCount}-`);
+        input.id = input.id.replace(/-(\d+)-/, `-${currentCount}-`);
+        if (input.type !== 'hidden') input.value = '';
+    });
+
+    totalForms.value = currentCount + 1;
+    document.querySelector('tbody').appendChild(newForm);
+});
+</script>
+{% endblock %}
