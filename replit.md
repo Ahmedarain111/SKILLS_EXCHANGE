@@ -25,6 +25,15 @@ A Django-based web application for users to exchange skills with each other. Use
 - Admin dashboard for managing users and exchanges
 
 ## Recent Changes
+- 2025-10-29: Admin Dashboard Enhancements
+  - **Real Statistics**: Fixed admin_dashboard to display actual exchange counts (active, pending, completed) instead of hardcoded zeros
+  - **User Management**: Added complete CRUD operations for users (view, delete, toggle admin status)
+  - **Enhanced Search**: Admin user search now includes username, email, and first name
+  - **Exchange Filtering**: Added status-based filtering (all, active, pending, dispute, completed, cancelled)
+  - **Security Hardening**: Added @require_POST decorators to admin_delete_user and admin_toggle_staff to prevent CSRF attacks
+  - **Template Improvements**: Rebuilt admin_users.html with functional buttons and admin_exchanges.html with working filters
+  - **Safety Checks**: Prevents admins from deleting or modifying their own accounts
+
 - 2025-10-29: Initial import and Replit environment setup
   - Installed Python 3.11 with Django 5.2.7, Pillow, and Gunicorn
   - Configured Django settings for Replit environment (ALLOWED_HOSTS, CSRF_TRUSTED_ORIGINS)
@@ -33,6 +42,8 @@ A Django-based web application for users to exchange skills with each other. Use
   - Configured workflow to run Django dev server on port 5000
   - Set up deployment configuration using Gunicorn with autoscale
   - Added .gitignore for Python/Django projects
+  - Fixed messaging system bugs and performance optimizations
+  - Created superuser account (username: admin, password: admin)
 
 ## Architecture
 - Traditional Django MVC architecture
