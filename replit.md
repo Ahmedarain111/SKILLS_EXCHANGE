@@ -25,6 +25,23 @@ A Django-based web application for users to exchange skills with each other. Use
 - Admin dashboard for managing users and exchanges
 
 ## Recent Changes
+- 2025-10-29: Bug Fixes and Performance Improvements
+  - **Critical Bug Fix**: Fixed start_exchange view using incorrect field name (skill_type → role)
+  - **UI Fix**: Fixed broken "Edit Profile" link in dashboard quick actions
+  - **Performance Optimization**: Added database indexes on frequently queried fields:
+    - UserSkill: role, proficiency, user+role composite
+    - Exchange: status, user1+status, user2+status, start_date
+    - Message: timestamp, is_read, receiver+is_read, sender+receiver
+  - **Cache Control**: Added NoCacheMiddleware to prevent browser caching of dynamic content
+  - **Code Quality**: Verified start_exchange is unused; propose_exchange_view is the active implementation
+
+- 2025-10-29: My Exchanges Page
+  - **New Page**: Created dedicated exchanges page at /exchanges/
+  - **Organized View**: Exchanges grouped by status (pending, active, completed, other)
+  - **Quick Actions**: Accept/reject pending requests, message active partners
+  - **Navigation**: Added "My Exchanges" links to header and dashboard
+  - **Smart Labels**: Clear display of skill offerings from each user's perspective
+
 - 2025-10-29: Admin Dashboard Enhancements
   - **Real Statistics**: Fixed admin_dashboard to display actual exchange counts (active, pending, completed) instead of hardcoded zeros
   - **User Management**: Added complete CRUD operations for users (view, delete, toggle admin status)
