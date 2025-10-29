@@ -79,25 +79,40 @@ from django.contrib.auth.decorators import login_required
 from .models import UserSkill, Category
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Category, UserSkill
+
 @login_required
 def marketplace_view(request):
     # Get all categories for sidebar
     categories = Category.objects.all()
 
-    # Read selected category from query (?category=1)
+    # Define level choices
+    levels = ["Any", "Beginner", "Intermediate", "Advanced", "Expert"]
+
+    # Read selected filters from query (?category=1&level=Beginner)
     category_id = request.GET.get("category")
+    level = request.GET.get("level")
 
     # Start with all offered skills (exclude current user)
     offered_skills = UserSkill.objects.filter(role="offer").exclude(user=request.user)
 
-    # If a category filter is applied
-    if category_id:
+    # Apply category filter if not empty or "All"
+    if category_id and category_id.lower() != "all":
         offered_skills = offered_skills.filter(skill__category_id=category_id)
+
+    # Apply skill level filter if not empty or "Any"
+    if level and level.lower() != "any":
+        offered_skills = offered_skills.filter(proficiency__iexact=level)
 
     # Prepare context
     context = {
         "categories": categories,
-        "skills": offered_skills,  # pass UserSkill queryset
+        "skills": offered_skills,
+        "levels": levels,  # pass to template
+        "selected_category": category_id or "all",
+        "selected_level": level or "any",
     }
 
     return render(request, "marketplace.html", context)
