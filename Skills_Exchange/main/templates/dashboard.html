@@ -46,6 +46,70 @@
     <div class="row">
         <!-- Left Column -->
         <div class="col-lg-8 mb-4">
+            <!-- Pending Exchange Requests -->
+            {% if pending_requests %}
+            <div class="pending-requests-card mb-4 p-4 shadow-sm rounded bg-white border-warning border-2">
+                <h2 class="mb-3">
+                    <i class="fas fa-bell text-warning me-2"></i>
+                    Pending Exchange Requests ({{ pending_requests|length }})
+                </h2>
+                {% for exchange in pending_requests %}
+                <div class="exchange-request-item p-3 mb-3 rounded" style="background-color: #fffbeb; border-left: 4px solid #f59e0b;">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="flex-grow-1">
+                            <h5 class="mb-2">
+                                <strong>
+                                    {% if exchange.user1.userprofile.full_name %}
+                                        {{ exchange.user1.userprofile.full_name }}
+                                    {% else %}
+                                        {{ exchange.user1.username }}
+                                    {% endif %}
+                                </strong>
+                                wants to exchange skills
+                            </h5>
+                            <div class="exchange-details mb-2">
+                                <p class="mb-1">
+                                    <i class="fas fa-arrow-right text-success me-2"></i>
+                                    <strong>They offer:</strong> <span class="badge bg-success">{{ exchange.skill1.name }}</span>
+                                </p>
+                                <p class="mb-1">
+                                    <i class="fas fa-arrow-left text-primary me-2"></i>
+                                    <strong>They want:</strong> <span class="badge bg-primary">{{ exchange.skill2.name }}</span>
+                                </p>
+                                {% if exchange.notes %}
+                                <p class="mb-1 mt-2">
+                                    <i class="fas fa-comment-dots me-2"></i>
+                                    <strong>Message:</strong> <em>"{{ exchange.notes }}"</em>
+                                </p>
+                                {% endif %}
+                                <p class="text-muted small mb-0">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Sent on {{ exchange.start_date|date:"M d, Y" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-3">
+                        <a href="{% url 'accept_exchange' exchange.id %}" 
+                           class="btn btn-success btn-sm px-4"
+                           onclick="return confirm('Accept this exchange proposal?')">
+                            <i class="fas fa-check me-1"></i>Accept
+                        </a>
+                        <a href="{% url 'reject_exchange' exchange.id %}" 
+                           class="btn btn-outline-danger btn-sm px-4"
+                           onclick="return confirm('Decline this exchange proposal?')">
+                            <i class="fas fa-times me-1"></i>Decline
+                        </a>
+                        <a href="{% url 'profile' exchange.user1.id %}" 
+                           class="btn btn-outline-secondary btn-sm px-4">
+                            <i class="fas fa-user me-1"></i>View Profile
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
             <!-- Recent Activity -->
             <div class="activity-card mb-4 p-4 shadow-sm rounded bg-white">
                 <h2 class="mb-3">Recent Activity</h2>

@@ -214,13 +214,18 @@ from django.contrib.auth.decorators import login_required
 def dashboard_view(request):
     user = request.user
 
+    pending_requests = Exchange.objects.filter(user2=user, status="pending").select_related(
+        'user1', 'user1__userprofile', 'skill1', 'skill2'
+    )
+
     context = {
         "offered_skills": UserSkill.objects.filter(user=user, role="offer").count(),
         "learning_skills": UserSkill.objects.filter(user=user, role="seek").count(),
         "active_exchanges": Exchange.objects.filter(
             Q(user1=user, status="active") | Q(user2=user, status="active")
         ).count(),
-        "profile_completion": 85,  # Dummy data
+        "pending_requests": pending_requests,
+        "profile_completion": 85,
         "recent_activities": [
             {
                 "icon": "fa-handshake",
@@ -390,3 +395,30 @@ def propose_exchange_view(request, user_skill_id):
     }
     
     return render(request, "propose_exchange.html", context)
+
+
+@login_required
+def accept_exchange(request, exchange_id):
+    """Accept a pending exchange proposal."""
+    exchange = get_object_or_404(Exchange, id=exchange_id, user2=request.user, status="pending")
+    
+    exchange.status = "active"
+    exchange.save()
+    
+    messages.success(
+        request,
+        f"Exchange accepted! You can now start learning {exchange.skill1.name} from {exchange.user1.userprofile.full_name if hasattr(exchange.user1, 'userprofile') else exchange.user1.username}."
+    )
+    return redirect("dashboard")
+
+
+@login_required
+def reject_exchange(request, exchange_id):
+    """Reject a pending exchange proposal."""
+    exchange = get_object_or_404(Exchange, id=exchange_id, user2=request.user, status="pending")
+    
+    exchange.status = "cancelled"
+    exchange.save()
+    
+    messages.info(request, "Exchange proposal declined.")
+    return redirect("dashboard")

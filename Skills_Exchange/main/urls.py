@@ -17,4 +17,6 @@ urlpatterns = [
     path('exchange/start/<int:user_id>/<int:skill_id>/', views.start_exchange, name='start_exchange'),
     path("manage-skills/", views.manage_skills, name="manage_skills"),
     path("propose-exchange/<int:user_skill_id>/", views.propose_exchange_view, name="propose_exchange"),
+    path("exchange/accept/<int:exchange_id>/", views.accept_exchange, name="accept_exchange"),
+    path("exchange/reject/<int:exchange_id>/", views.reject_exchange, name="reject_exchange"),
 ]
