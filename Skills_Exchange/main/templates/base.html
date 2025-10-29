@@ -9,44 +9,69 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .dropdown-toggle::after {
+  display: none !important;
+}
+    </style>
 </head>
 
 <body>
     <!-- HEADER -->
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-            <div class="container">
-                <a class="navbar-brand logo" href="{% url 'marketplace' %}">Skill<span>Swap</span></a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container">
+      <a class="navbar-brand logo" href="{% url 'marketplace' %}">
+        Skill<span>Swap</span>
+      </a>
 
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto nav-links">
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}" href="{% url 'index' %}">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'marketplace' %}active{% endif %}" href="{% url 'marketplace' %}">Marketplace</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
-                        </li>
-                    </ul>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-                    <div class="auth-buttons" id="authButtons">
-                        {% if user.is_authenticated %}
-                            <a href="{% url 'profile' user.id %}" class="btn btn-outline me-2">Profile</a>
-                            <a href="" class="btn btn-primary">Logout</a>
-                        {% else %}
-                            <a href="{% url 'login' %}" class="btn btn-outline me-2">Log In</a>
-                            <a href="{% url 'signup' %}" class="btn btn-primary">Register</a>
-                        {% endif %}
-                    </div>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <!-- Left links -->
+        <ul class="navbar-nav me-auto nav-links">
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}" href="{% url 'index' %}">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'marketplace' %}active{% endif %}" href="{% url 'marketplace' %}">Marketplace</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
+          </li>
+        </ul>
+
+        <!-- Right user/auth area -->
+        <div class="d-flex align-items-center">
+          {% if user.is_authenticated %}
+            <div class="dropdown">
+              <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center" style="width:40px; height:40px; font-weight:600;">
+                  {% if user.first_name %}
+                    {{ user.first_name|slice:":1"|upper }}
+                  {% else %}
+                    {{ user.username|slice:":1"|upper }}
+                  {% endif %}
                 </div>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href="{% url 'profile' user.id %}"><i class="fa-solid fa-user me-2"></i>Profile</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+              </ul>
             </div>
-        </nav>
-    </header>
+          {% else %}
+            <a href="{% url 'login' %}" class="btn btn-outline me-2">Log In</a>
+            <a href="{% url 'signup' %}" class="btn btn-primary">Register</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+
 
     <!-- MAIN CONTENT BLOCK -->
     <main>

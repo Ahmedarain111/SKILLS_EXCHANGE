@@ -1,116 +1,84 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skill Marketplace | SkillSwap</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/home.css' %}">
-    <style>
 
+{% block title %}Skill Marketplace | SkillSwap{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<style>
+    .custom { margin: 20px 0px !important; }
+    .active { color: white !important; }
+    .link { color: #4361ee !important; }
 
-        .custom { margin: 20px 0px !important; }
-        .active { color: white !important; }
-        .link { color: #4361ee !important; }
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-            gap: 20px;
-        }
-        .skill-card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            padding: 20px;
-            transition: transform 0.2s ease;
-        }
-        .skill-card:hover {
-            transform: translateY(-4px);
-        }
-        .skill-card h3 {
-            color: #2563EB;
-            font-size: 1.2rem;
-            margin-bottom: 8px;
-        }
-        .skill-card p {
-            font-size: 0.9rem;
-            color: #475569;
-        }
+    .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 20px;
+    }
 
-        .filters-sidebar {
-    position: sticky;
-    top: 90px;
-}
+    .skill-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        padding: 20px;
+        transition: transform 0.2s ease;
+    }
 
-.category-list {
-    padding-left: 0;
-}
+    .skill-card:hover {
+        transform: translateY(-4px);
+    }
 
-.category-link {
-    color: #1e293b;
-    background: #f8fafc;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    font-size: 0.95rem;
-    font-weight: 500;
-}
+    .skill-card h3 {
+        color: #2563EB;
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+    }
 
-.category-link:hover {
-    background-color: #e0ecff;
-    color: #2563eb;
-    transform: translateX(3px);
-}
+    .skill-card p {
+        font-size: 0.9rem;
+        color: #475569;
+    }
 
-.category-link.active {
-    background-color: #2563eb;
-    color: white !important;
-    font-weight: 600;
-    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
-}
+    .filters-sidebar {
+        position: sticky;
+        top: 90px;
+    }
 
-    </style>
-</head>
-<body>
+    .category-list {
+        padding-left: 0;
+    }
 
-<header>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container">
-            <a class="navbar-brand logo" href="{% url 'marketplace' %}">Skill<span>Swap</span></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto nav-links">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'index' %}">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link link" href="{% url 'marketplace' %}">Marketplace</a>
-                    </li>
-                </ul>
-                <div class="user-menu" id="userMenu">
-                    <div class="user-avatar" title="{{ user.first_name }}"><a href="{% url 'profile' user.id %}">View Profile</a>
+    .category-link {
+        color: #1e293b;
+        background: #f8fafc;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
 
-                        {% if user.first_name %}
-                            {{ user.first_name|slice:":1"|upper }}
-                        {% else %}
-                            {{ user.username|slice:":1"|upper }}
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
-</header>
+    .category-link:hover {
+        background-color: #e0ecff;
+        color: #2563eb;
+        transform: translateX(3px);
+    }
 
-<section class="marketplace-hero">
-    <div class="container text-center">
-        <h1>Discover Skill Collaborations</h1>
-        <p>Exchange skills, connect with others, and collaborate creatively — no money involved!</p>
+    .category-link.active {
+        background-color: #2563eb;
+        color: white !important;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="marketplace-hero py-5 text-center bg-light">
+    <div class="container">
+        <h1 class="fw-bold">Discover Skill Collaborations</h1>
+        <p class="text-muted">
+            Exchange skills, connect with others, and collaborate creatively — no money involved!
+        </p>
     </div>
 </section>
 
@@ -118,25 +86,24 @@
     <div class="row">
         <!-- Sidebar -->
         <div class="col-md-3">
-    <div class="filters-sidebar p-3 bg-white rounded-3 shadow-sm">
-        <h4 class="mb-3 text-primary fw-semibold">
-            <i class="fa-solid fa-layer-group me-2"></i>Categories
-        </h4>
-        <ul class="list-unstyled mb-0 category-list">
-            {% for category in categories %}
-                <li class="mb-2">
-                    <a href="?category={{ category.id }}"
-                       class="category-link d-block px-3 py-2 rounded-2 {% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}">
-                        {{ category.name }}
-                    </a>
-                </li>
-            {% empty %}
-                <li class="text-muted">No categories yet.</li>
-            {% endfor %}
-        </ul>
-    </div>
-</div>
-
+            <div class="filters-sidebar p-3 bg-white rounded-3 shadow-sm">
+                <h4 class="mb-3 text-primary fw-semibold">
+                    <i class="fa-solid fa-layer-group me-2"></i>Categories
+                </h4>
+                <ul class="list-unstyled mb-0 category-list">
+                    {% for category in categories %}
+                        <li class="mb-2">
+                            <a href="?category={{ category.id }}"
+                               class="category-link d-block px-3 py-2 rounded-2 {% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}">
+                                {{ category.name }}
+                            </a>
+                        </li>
+                    {% empty %}
+                        <li class="text-muted">No categories yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
 
         <!-- Skills -->
         <div class="col-md-9">
@@ -144,29 +111,20 @@
                 <h2 id="skillsCount">Available Skills</h2>
             </div>
 
-<div class="skills-grid" id="skillsGrid">
-    {% for uskill in skills %}
-        <div class="skill-card">
-            <h3>{{ uskill.skill.name }}</h3>
-            <p>Category: {{ uskill.skill.category.name }}</p>
-            <p>Proficiency: {{ uskill.proficiency|default:"N/A" }}</p>
-            <p>Experience: {{ uskill.experience_years|default:"N/A" }} years</p>
-            <p>By: {{ uskill.user.username }}</p>
+            <div class="skills-grid" id="skillsGrid">
+                {% for uskill in skills %}
+                    <div class="skill-card">
+                        <h3>{{ uskill.skill.name }}</h3>
+                        <p>Category: {{ uskill.skill.category.name }}</p>
+                        <p>Proficiency: {{ uskill.proficiency|default:"N/A" }}</p>
+                        <p>Experience: {{ uskill.experience_years|default:"N/A" }} years</p>
+                        <p>By: <a href="{% url 'profile' uskill.user.id %}" class="text-decoration-none">{{ uskill.user.username }}</a></p>
+                    </div>
+                {% empty %}
+                    <p>No skills found for this category.</p>
+                {% endfor %}
+            </div>
         </div>
-    {% empty %}
-        <p>No skills found for this category.</p>
-    {% endfor %}
-</div>
-
     </div>
 </div>
-
-<footer class="mt-5 py-4 bg-light text-center">
-    <div class="container">
-        <p class="mb-0">&copy; 2025 SkillSwap. All rights reserved.</p>
-    </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endblock %}

@@ -61,6 +61,15 @@ def login_view(request):
     return render(request, "login.html")
 
 
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+
+
+def logout_view(request):
+    logout(request)
+    return redirect("index")
+
+
 def index_view(request):
     return render(request, "index.html")
 
@@ -176,6 +185,7 @@ def create_profile(request):
         form = UserProfileForm()
 
     return render(request, "create_profile.html", {"form": form})
+
 
 @login_required
 def dashboard_view(request):
