@@ -346,3 +346,47 @@ def manage_skills(request):
         formset = SkillFormSet(queryset=queryset)
 
     return render(request, "manage_skills.html", {"formset": formset})
+
+
+@login_required
+def propose_exchange_view(request, user_skill_id):
+    """View to propose a skill exchange with another user."""
+    other_user_skill = get_object_or_404(UserSkill, id=user_skill_id, role="offer")
+    
+    if other_user_skill.user == request.user:
+        messages.error(request, "You cannot propose an exchange with yourself!")
+        return redirect("marketplace")
+    
+    my_offered_skills = UserSkill.objects.filter(user=request.user, role="offer")
+    
+    if request.method == "POST":
+        my_skill_id = request.POST.get("my_skill")
+        notes = request.POST.get("notes", "")
+        
+        if not my_skill_id:
+            messages.error(request, "Please select a skill you want to offer.")
+            return redirect("propose_exchange", user_skill_id=user_skill_id)
+        
+        my_skill = get_object_or_404(UserSkill, id=my_skill_id, user=request.user, role="offer")
+        
+        exchange = Exchange.objects.create(
+            user1=request.user,
+            user2=other_user_skill.user,
+            skill1=my_skill.skill,
+            skill2=other_user_skill.skill,
+            status="pending",
+            notes=notes
+        )
+        
+        messages.success(
+            request,
+            f"Exchange proposal sent to {other_user_skill.user.userprofile.full_name if hasattr(other_user_skill.user, 'userprofile') else other_user_skill.user.username}!"
+        )
+        return redirect("dashboard")
+    
+    context = {
+        "other_user_skill": other_user_skill,
+        "my_offered_skills": my_offered_skills,
+    }
+    
+    return render(request, "propose_exchange.html", context)

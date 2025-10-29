@@ -16,4 +16,5 @@ urlpatterns = [
     path('dashboard/', views.dashboard_view, name="dashboard"),
     path('exchange/start/<int:user_id>/<int:skill_id>/', views.start_exchange, name='start_exchange'),
     path("manage-skills/", views.manage_skills, name="manage_skills"),
+    path("propose-exchange/<int:user_skill_id>/", views.propose_exchange_view, name="propose_exchange"),
 ]
