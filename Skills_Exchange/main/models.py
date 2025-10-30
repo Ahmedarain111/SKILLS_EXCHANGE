@@ -107,9 +107,30 @@ class Exchange(models.Model):
     end_date = models.DateTimeField(null=True, blank=True)
     notes = models.TextField(blank=True)
     last_updated = models.DateTimeField(auto_now=True)
+    
+    user1_completed = models.BooleanField(default=False, help_text="User1 marked their part as complete")
+    user2_completed = models.BooleanField(default=False, help_text="User2 marked their part as complete")
+    user1_completed_date = models.DateTimeField(null=True, blank=True)
+    user2_completed_date = models.DateTimeField(null=True, blank=True)
+    admin_approved = models.BooleanField(default=False, help_text="Admin verified both users completed the exchange")
+    admin_approved_date = models.DateTimeField(null=True, blank=True)
+    admin_notes = models.TextField(blank=True, help_text="Admin notes about this exchange")
 
     def __str__(self):
         return f"{self.user1.username} ↔ {self.user2.username} ({self.skill1} ↔ {self.skill2})"
+    
+    def both_users_completed(self):
+        return self.user1_completed and self.user2_completed
+    
+    def completion_status(self):
+        if self.admin_approved:
+            return "Admin Approved"
+        elif self.both_users_completed():
+            return "Awaiting Admin Approval"
+        elif self.user1_completed or self.user2_completed:
+            return "Partially Complete"
+        else:
+            return "In Progress"
 
     class Meta:
         ordering = ["-start_date"]
