@@ -161,7 +161,9 @@ def admin_users(request):
     query = request.GET.get("q", "")
     if query:
         users = User.objects.filter(
-            Q(username__icontains=query) | Q(email__icontains=query) | Q(first_name__icontains=query)
+            Q(username__icontains=query)
+            | Q(email__icontains=query)
+            | Q(first_name__icontains=query)
         ).order_by("-date_joined")
     else:
         users = User.objects.all().order_by("-date_joined")
@@ -171,16 +173,16 @@ def admin_users(request):
 @staff_member_required
 def admin_exchanges(request):
     status_filter = request.GET.get("status", "all")
-    
+
     exchanges = Exchange.objects.all().select_related(
         "user1", "user2", "user1__userprofile", "user2__userprofile", "skill1", "skill2"
     )
-    
+
     if status_filter and status_filter != "all":
         exchanges = exchanges.filter(status=status_filter)
-    
+
     exchanges = exchanges.order_by("-start_date")
-    
+
     context = {
         "exchanges": exchanges,
         "status_filter": status_filter,
@@ -193,12 +195,12 @@ def admin_exchanges(request):
 def admin_delete_user(request, user_id):
     """Delete a user (POST only for CSRF protection)"""
     user_to_delete = get_object_or_404(User, id=user_id)
-    
+
     # Prevent deleting yourself
     if user_to_delete == request.user:
         messages.error(request, "You cannot delete your own account!")
         return redirect("admin_users")
-    
+
     username = user_to_delete.username
     user_to_delete.delete()
     messages.success(request, f"User '{username}' has been deleted successfully.")
@@ -210,16 +212,16 @@ def admin_delete_user(request, user_id):
 def admin_toggle_staff(request, user_id):
     """Toggle user staff status (POST only for CSRF protection)"""
     user_to_toggle = get_object_or_404(User, id=user_id)
-    
+
     # Prevent removing your own staff status
     if user_to_toggle == request.user:
         messages.error(request, "You cannot change your own staff status!")
         return redirect("admin_users")
-    
+
     user_to_toggle.is_staff = not user_to_toggle.is_staff
     user_to_toggle.is_superuser = user_to_toggle.is_staff
     user_to_toggle.save()
-    
+
     status = "Admin" if user_to_toggle.is_staff else "Regular User"
     messages.success(request, f"User '{user_to_toggle.username}' is now a {status}.")
     return redirect("admin_users")
@@ -241,8 +243,12 @@ def profile_view(request, user_id):
             return render(request, "profile_not_found.html", {"profile_user": user})
 
     # Fetch offered and wanted skills
-    offered_skills = UserSkill.objects.filter(user=user, role="offer").select_related("skill")
-    wanted_skills = UserSkill.objects.filter(user=user, role="seek").select_related("skill")
+    offered_skills = UserSkill.objects.filter(user=user, role="offer").select_related(
+        "skill"
+    )
+    wanted_skills = UserSkill.objects.filter(user=user, role="seek").select_related(
+        "skill"
+    )
 
     context = {
         "profile_user": user,
@@ -302,7 +308,14 @@ def dashboard_view(request):
     recent_activities = []
     recent_exchanges = (
         Exchange.objects.filter(Q(user1=user) | Q(user2=user))
-        .select_related("user1", "user2", "user1__userprofile", "user2__userprofile", "skill1", "skill2")
+        .select_related(
+            "user1",
+            "user2",
+            "user1__userprofile",
+            "user2__userprofile",
+            "skill1",
+            "skill2",
+        )
         .order_by("-last_updated")[:5]
     )
 
@@ -321,9 +334,9 @@ def dashboard_view(request):
                 skill_learning = exchange.skill1.name
             recent_activities.append(
                 {
-                    "icon": "fa-handshake",
+                    "icon": "fa-handshake text-white",
                     "title": "Active Exchange",
-                    "description": f"Learning {skill_learning} with {other_user_name}",
+                    "description": f"Exchanging skills with {other_user_name}",
                     "time": f"{(exchange.last_updated).strftime('%b %d, %Y')}",
                 }
             )
@@ -367,9 +380,13 @@ def dashboard_view(request):
         for match_skill in potential_matches:
             other_user = match_skill.user
             # Check if they seek what I offer
-            their_seeking = UserSkill.objects.filter(
-                user=other_user, role="seek", skill_id__in=my_offering_skills
-            ).select_related("skill").first()
+            their_seeking = (
+                UserSkill.objects.filter(
+                    user=other_user, role="seek", skill_id__in=my_offering_skills
+                )
+                .select_related("skill")
+                .first()
+            )
 
             if their_seeking:
                 name = (
@@ -410,18 +427,25 @@ def dashboard_view(request):
 def exchanges_view(request):
     """Display all exchanges for the current user."""
     user = request.user
-    
-    all_exchanges = Exchange.objects.filter(
-        Q(user1=user) | Q(user2=user)
-    ).select_related(
-        "user1", "user2", "user1__userprofile", "user2__userprofile", "skill1", "skill2"
-    ).order_by("-start_date")
-    
+
+    all_exchanges = (
+        Exchange.objects.filter(Q(user1=user) | Q(user2=user))
+        .select_related(
+            "user1",
+            "user2",
+            "user1__userprofile",
+            "user2__userprofile",
+            "skill1",
+            "skill2",
+        )
+        .order_by("-start_date")
+    )
+
     pending_exchanges = []
     active_exchanges = []
     completed_exchanges = []
     other_exchanges = []
-    
+
     for exchange in all_exchanges:
         other_user = exchange.user2 if exchange.user1 == user else exchange.user1
         other_user_name = (
@@ -429,9 +453,9 @@ def exchanges_view(request):
             if hasattr(other_user, "userprofile") and other_user.userprofile.full_name
             else other_user.username
         )
-        
+
         is_initiator = exchange.user1 == user
-        
+
         exchange_data = {
             "id": exchange.id,
             "other_user": other_user,
@@ -444,7 +468,7 @@ def exchanges_view(request):
             "last_updated": exchange.last_updated,
             "notes": exchange.notes,
         }
-        
+
         if exchange.status == "pending":
             pending_exchanges.append(exchange_data)
         elif exchange.status == "active":
@@ -453,7 +477,7 @@ def exchanges_view(request):
             completed_exchanges.append(exchange_data)
         else:
             other_exchanges.append(exchange_data)
-    
+
     context = {
         "pending_exchanges": pending_exchanges,
         "active_exchanges": active_exchanges,
@@ -461,7 +485,7 @@ def exchanges_view(request):
         "other_exchanges": other_exchanges,
         "total_count": all_exchanges.count(),
     }
-    
+
     return render(request, "exchanges.html", context)
 
 
@@ -471,9 +495,7 @@ def start_exchange(request, user_id, skill_id):
     other_user_skill = get_object_or_404(UserSkill, id=skill_id, user_id=user_id)
     current_user = request.user
 
-    teach_skill = UserSkill.objects.filter(
-        user=current_user, role="offer"
-    ).first()
+    teach_skill = UserSkill.objects.filter(user=current_user, role="offer").first()
     if not teach_skill:
         messages.error(
             request, "You must add a skill you can offer before starting an exchange."
@@ -531,9 +553,9 @@ def manage_skills(request):
 def propose_exchange_view(request, user_skill_id):
     """View to propose a skill exchange with another user."""
     other_user_skill = get_object_or_404(
-        UserSkill.objects.select_related("user", "user__userprofile", "skill"), 
-        id=user_skill_id, 
-        role="offer"
+        UserSkill.objects.select_related("user", "user__userprofile", "skill"),
+        id=user_skill_id,
+        role="offer",
     )
 
     if other_user_skill.user == request.user:
@@ -583,10 +605,12 @@ def propose_exchange_view(request, user_skill_id):
 def accept_exchange(request, exchange_id):
     """Accept a pending exchange proposal."""
     exchange = get_object_or_404(
-        Exchange.objects.select_related("user1", "user1__userprofile", "user2", "skill1", "skill2"),
+        Exchange.objects.select_related(
+            "user1", "user1__userprofile", "user2", "skill1", "skill2"
+        ),
         id=exchange_id,
         user2=request.user,
-        status="pending"
+        status="pending",
     )
 
     exchange.status = "active"
@@ -633,7 +657,9 @@ def messages_view(request, user_id=None):
     conversation_user_ids = set(list(sent_to_ids) + list(received_from_ids))
 
     # Fetch all conversation users with profiles in one query
-    conversation_users = User.objects.filter(id__in=conversation_user_ids).select_related("userprofile")
+    conversation_users = User.objects.filter(
+        id__in=conversation_user_ids
+    ).select_related("userprofile")
     user_map = {user.id: user for user in conversation_users}
 
     # Fetch all relevant messages for conversations in bulk
@@ -651,7 +677,8 @@ def messages_view(request, user_id=None):
 
         # Find last message for this conversation
         user_messages = [
-            m for m in all_messages
+            m
+            for m in all_messages
             if (m.sender_id == current_user.id and m.receiver_id == uid)
             or (m.sender_id == uid and m.receiver_id == current_user.id)
         ]
@@ -659,7 +686,8 @@ def messages_view(request, user_id=None):
 
         # Count unread messages
         unread_count = sum(
-            1 for m in user_messages
+            1
+            for m in user_messages
             if m.sender_id == uid and m.receiver_id == current_user.id and not m.is_read
         )
 
@@ -683,7 +711,9 @@ def messages_view(request, user_id=None):
     selected_user = None
     messages_list = []
     if user_id:
-        selected_user = get_object_or_404(User.objects.select_related("userprofile"), id=user_id)
+        selected_user = get_object_or_404(
+            User.objects.select_related("userprofile"), id=user_id
+        )
 
         # Mark unread messages as read
         Message.objects.filter(
@@ -716,6 +746,7 @@ def messages_view(request, user_id=None):
     }
 
     return render(request, "messages.html", context)
+
 
 def devteam_view(request):
     return render(request, "devteam.html")

@@ -112,32 +112,40 @@
             display: none;
         }
     }
+    .dropdown-toggle::after {
+  display: none !important;
+}
     </style>
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
             <div class="container">
-                <a class="navbar-brand logo" href="{% url 'index' %}">Skill<span>Swap</span></a>
+                <a class="logo" href="{% url 'index' %}">Skill<span>Swap</span></a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto nav-links">
-                        <li class="nav-item"><a class="nav-link" href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'admin_dashboard' %}">Admin Dashboard</a></li>
                         <li class="nav-item"><a class="nav-link active" href="{% url 'admin_users' %}">Users</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'admin_exchanges' %}">Exchanges</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">User View</a></li>
                     </ul>
                     <div class="user-menu">
-                        <div class="user-avatar">
-                            {% if user.first_name %}
-                                {{ user.first_name|slice:":1"|upper }}
-                            {% else %}
-                                {{ user.username|slice:":1"|upper }}
-                            {% endif %}
-                        </div>
-                    </div>
+
+                            <div class="dropdown">
+              <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="rounded-circle  text-white d-flex justify-content-center align-items-center" style="width:40px; height:40px; font-weight:600;">
+                  <img src="{% static 'admin.png' %}" style="width: 24px;">
+                </div>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href="{% url 'profile' user.id %}"><i class="fa-solid fa-user me-2"></i>Profile</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+              </ul>
+            </div>
                 </div>
             </div>
         </nav>
@@ -145,10 +153,10 @@
 
     <div class="admin-container">
         <div class="admin-header">
-            <h1>User Management</h1>
+            <h1 class="text-primary">User Management</h1>
             <form method="get" class="d-flex gap-2">
                 <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search users..." class="form-control" style="max-width: 300px;">
-                <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Search</button>
+                <button class="btn btn-primary" style="border-radius:100px !important;" type="submit"><i class="fas fa-search"></i></button>
             </form>
         </div>
 
@@ -175,11 +183,9 @@
             <div class="user-row">
                 <div class="d-flex align-items-center gap-2">
                     <div class="user-avatar-admin">{{ u.username|slice:":1"|upper }}</div>
-                    <span>#{{ u.id }}</span>
                 </div>
                 <div>
-                    <strong>{{ u.username }}</strong>
-                    {% if u.first_name %}<br><small class="text-muted">{{ u.get_full_name }}</small>{% endif %}
+                    <strong>{% if u.userprofile.full_name %} {{ u.userprofile.full_name }} {% else %} N/A {% endif %}</strong>
                 </div>
                 <div class="user-email">{{ u.email|default:"No email" }}</div>
                 <div>

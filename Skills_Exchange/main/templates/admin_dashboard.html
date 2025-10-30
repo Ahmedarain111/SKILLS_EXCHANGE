@@ -123,6 +123,9 @@
         footer > h3 {
             color: var(--secondary);
         }
+        .dropdown-toggle::after {
+  display: none !important;
+}
     </style>
 </head>
 
@@ -131,7 +134,7 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
             <div class="container">
-                <a class="navbar-brand logo" href="{% url 'index' %}">Skill<span>Swap</span></a>
+                <a class="logo" href="{% url 'index' %}">Skill<span>Swap</span></a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
@@ -141,13 +144,21 @@
                         <li class="nav-item"><a class="nav-link active" href="{% url 'admin_dashboard' %}">Admin Dashboard</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'admin_users' %}">Users</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'admin_exchanges' %}">Exchanges</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">Reports</a></li>
                     </ul>
                     <div class="user-menu">
                         {% if user.is_authenticated %}
-                            <div class="user-avatar">
-                                {{ user.first_name|first|upper }}
-                            </div>
+                            <div class="dropdown">
+              <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="rounded-circle  text-white d-flex justify-content-center align-items-center" style="width:40px; height:40px; font-weight:600;">
+                  <img src="{% static 'admin.png' %}" style="width: 24px;">
+                </div>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href="{% url 'profile' user.id %}"><i class="fa-solid fa-user me-2"></i>Profile</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+              </ul>
+            </div>
                         {% else %}
                             <a href="{% url 'login' %}" class="btn btn-outline me-2">Log In</a>
                             <a href="{% url 'signup' %}" class="btn btn-primary">Register</a>
@@ -160,18 +171,15 @@
 
     <div class="admin-container">
         <div class="admin-header">
-            <h1>Admin Dashboard</h1>
+            <h1 class="text-primary">Admin Dashboard</h1>
             <div class="admin-actions">
-                <button class="btn btn-primary">
-                    <i class="fas fa-download"></i> Generate Report
-                </button>
-                <button class="btn btn-outline">
+                <button class="btn btn-outline" onclick="location.reload();">
                     <i class="fas fa-sync"></i> Refresh
                 </button>
             </div>
         </div>
 
-        <div class="admin-stats">
+        <div class="admin-stats"> 
             <div class="admin-stat-card">
                 <div class="admin-stat-number">{{ total_users }}</div>
                 <p>Total Users</p>

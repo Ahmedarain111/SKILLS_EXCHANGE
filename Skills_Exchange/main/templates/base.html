@@ -21,7 +21,7 @@
     <header>
   <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
-      <a class="navbar-brand logo" href="{% url 'marketplace' %}">
+      <a class="logo" href="{% url 'index' %}">
         Skill<span>Swap</span>
       </a>
 
@@ -38,9 +38,15 @@
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'marketplace' %}active{% endif %}" href="{% url 'marketplace' %}">Marketplace</a>
           </li>
+          {% if user.is_staff %}
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
+          </li>
+          {% else %}
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
           </li>
+          {% endif %}
           {% if user.is_authenticated %}
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'exchanges' %}active{% endif %}" href="{% url 'exchanges' %}">My Exchanges</a>

@@ -44,7 +44,7 @@
     
     .filter-btn.active {
         background: #4361ee;
-        color: white;
+        color: white !important;
         border-color: #4361ee;
     }
 
@@ -148,30 +148,45 @@
             align-items: flex-start;
         }
     }
+    .dropdown-toggle::after {
+  display: none !important;
+}
     </style>
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
             <div class="container">
-                <a class="navbar-brand logo" href="{% url 'index' %}">Skill<span>Swap</span></a>
+                <a class="logo" href="{% url 'index' %}">Skill<span>Swap</span></a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto nav-links">
-                        <li class="nav-item"><a class="nav-link" href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'admin_dashboard' %}">Admin Dashboard</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'admin_users' %}">Users</a></li>
                         <li class="nav-item"><a class="nav-link active" href="{% url 'admin_exchanges' %}">Exchanges</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">User View</a></li>
                     </ul>
                     <div class="user-menu">
-                        <div class="user-avatar">
-                            {% if user.first_name %}
-                                {{ user.first_name|slice:":1"|upper }}
-                            {% else %}
-                                {{ user.username|slice:":1"|upper }}
-                            {% endif %}
+
+                        <div class="dropdown">
+                            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle"
+                                id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="rounded-circle  text-white d-flex justify-content-center align-items-center"
+                                    style="width:40px; height:40px; font-weight:600;">
+                                    <img src="{% static 'admin.png' %}" style="width: 24px;">
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="{% url 'profile' user.id %}"><i
+                                            class="fa-solid fa-user me-2"></i>Profile</a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i
+                                            class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -181,7 +196,7 @@
 
     <div class="admin-container">
         <div class="admin-header">
-            <h1>Exchange Management</h1>
+            <h1 class="text-primary">Exchange Management</h1>
             <div class="admin-actions">
                 <button class="btn btn-outline-primary" onclick="location.reload()">
                     <i class="fas fa-sync"></i> Refresh
@@ -217,7 +232,6 @@
                         <div class="exchange-header">
                             <div>
                                 <h4 class="mb-1">{{ exchange.skill1 }} ↔ {{ exchange.skill2 }}</h4>
-                                <span class="exchange-id">#{{ exchange.id }}</span>
                             </div>
                             <span class="exchange-status status-{{ exchange.status }}">
                                 {{ exchange.status|title }}
@@ -226,21 +240,17 @@
 
                         <div class="exchange-details">
                             <div class="exchange-party">
-                                <h5>{{ exchange.user1.username }}</h5>
+                                <h5>{{ exchange.user1.userprofile.full_name }}</h5>
                                 <p class="text-muted mb-0">Provides: <strong>{{ exchange.skill1 }}</strong></p>
-                                {% if exchange.user1.userprofile %}
-                                    <small class="text-muted">{{ exchange.user1.userprofile.full_name }}</small>
-                                {% endif %}
+                                
                             </div>
                             <div class="exchange-arrow">
                                 <i class="fas fa-exchange-alt"></i>
                             </div>
                             <div class="exchange-party">
-                                <h5>{{ exchange.user2.username }}</h5>
+                                <h5>{{ exchange.user2.userprofile.full_name }}</h5>
                                 <p class="text-muted mb-0">Provides: <strong>{{ exchange.skill2 }}</strong></p>
-                                {% if exchange.user2.userprofile %}
-                                    <small class="text-muted">{{ exchange.user2.userprofile.full_name }}</small>
-                                {% endif %}
+                                
                             </div>
                         </div>
 
@@ -297,7 +307,7 @@
                     <ul class="footer-links">
                         <li><a href="{% url 'index' %}">Home</a></li>
                         <li><a href="{% url 'marketplace' %}">Marketplace</a></li>
-                        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li><a href="{% url 'dashboard' %}">Admin Dashboard</a></li>
                         <li><a href="#">Success Stories</a></li>
                     </ul>
                 </div>
