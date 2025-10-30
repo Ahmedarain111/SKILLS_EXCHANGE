@@ -4,6 +4,12 @@
 A Django-based web application that enables users to exchange skills with each other. The platform allows users to create profiles, list their skills, browse a marketplace of available skills, and propose skill exchanges with other users.
 
 ## Recent Changes
+- **Oct 30, 2025**: Added exchange completion tracking and admin approval system
+  - Added completion tracking fields to Exchange model (user1_completed, user2_completed, admin_approved)
+  - Enhanced admin interface with visual indicators, filters, and batch approval actions
+  - Implemented secure user-facing completion workflow with POST requests and CSRF protection
+  - Updated exchange templates to display completion status
+  - Workflow: Users mark their part complete → Both complete → Admin reviews and approves
 - **Oct 30, 2025**: Initial project import and setup for Replit environment
   - Configured Django to run on port 5000 with 0.0.0.0 binding
   - Added STATIC_ROOT for static file collection

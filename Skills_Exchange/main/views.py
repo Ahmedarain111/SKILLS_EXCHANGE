@@ -645,18 +645,17 @@ def reject_exchange(request, exchange_id):
 
 
 @login_required
+@require_POST
 def mark_exchange_complete(request, exchange_id):
-    """Mark the user's part of an exchange as complete."""
+    """Mark the user's part of an exchange as complete (POST only with CSRF)."""
+    user = request.user
+    
     exchange = get_object_or_404(
         Exchange,
+        Q(user1=user) | Q(user2=user),
         id=exchange_id,
         status="active"
     )
-    
-    user = request.user
-    if user != exchange.user1 and user != exchange.user2:
-        messages.error(request, "You are not part of this exchange.")
-        return redirect("exchanges")
     
     is_user1 = user == exchange.user1
     
