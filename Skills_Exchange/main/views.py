@@ -716,3 +716,6 @@ def messages_view(request, user_id=None):
     }
 
     return render(request, "messages.html", context)
+
+def devteam_view(request):
+    return render(request, "devteam.html")

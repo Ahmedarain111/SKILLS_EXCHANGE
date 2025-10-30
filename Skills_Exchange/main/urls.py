@@ -24,4 +24,5 @@ urlpatterns = [
     path("exchange/reject/<int:exchange_id>/", views.reject_exchange, name="reject_exchange"),
     path("messages/", views.messages_view, name="messages"),
     path("messages/<int:user_id>/", views.messages_view, name="conversation"),
+    path("devteam/", views.devteam_view, name="devteam"),
 ]
