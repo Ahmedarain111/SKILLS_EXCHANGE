@@ -22,6 +22,7 @@ urlpatterns = [
     path("propose-exchange/<int:user_skill_id>/", views.propose_exchange_view, name="propose_exchange"),
     path("exchange/accept/<int:exchange_id>/", views.accept_exchange, name="accept_exchange"),
     path("exchange/reject/<int:exchange_id>/", views.reject_exchange, name="reject_exchange"),
+    path("exchange/complete/<int:exchange_id>/", views.mark_exchange_complete, name="mark_exchange_complete"),
     path("messages/", views.messages_view, name="messages"),
     path("messages/<int:user_id>/", views.messages_view, name="conversation"),
     path("devteam/", views.devteam_view, name="devteam"),

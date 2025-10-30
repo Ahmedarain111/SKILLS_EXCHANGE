@@ -143,6 +143,30 @@
                                         <strong>You're seeking:</strong>
                                         <span class="badge bg-primary ms-1">{{ exchange.their_skill.name }}</span>
                                     </p>
+                                    <div class="mt-2 p-2 bg-light rounded">
+                                        <p class="mb-1 small">
+                                            <strong>Your status:</strong>
+                                            {% if exchange.my_completed %}
+                                                <span class="badge bg-success">✓ Completed</span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">○ In Progress</span>
+                                            {% endif %}
+                                        </p>
+                                        <p class="mb-1 small">
+                                            <strong>{{ exchange.other_user_name }}'s status:</strong>
+                                            {% if exchange.their_completed %}
+                                                <span class="badge bg-success">✓ Completed</span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">○ In Progress</span>
+                                            {% endif %}
+                                        </p>
+                                        {% if exchange.completion_status == "Awaiting Admin Approval" %}
+                                        <p class="mb-0 small text-info">
+                                            <i class="fas fa-hourglass-half me-1"></i>
+                                            <strong>Both parts complete - Awaiting admin approval</strong>
+                                        </p>
+                                        {% endif %}
+                                    </div>
                                 </div>
                                 <p class="text-muted small mb-0 mt-2">
                                     <i class="fas fa-calendar-check me-1"></i>
@@ -152,6 +176,17 @@
                         </div>
                     </div>
                     <div class="col-md-4 text-md-end">
+                        {% if not exchange.my_completed and not exchange.admin_approved %}
+                        <a href="{% url 'mark_exchange_complete' exchange.id %}" 
+                           class="btn btn-success btn-sm mb-2 w-100"
+                           onclick="return confirm('Mark your part of this exchange as complete?')">
+                            <i class="fas fa-check-circle me-1"></i>Mark Complete
+                        </a>
+                        {% elif exchange.my_completed and not exchange.admin_approved %}
+                        <button class="btn btn-outline-success btn-sm mb-2 w-100" disabled>
+                            <i class="fas fa-check me-1"></i>You Completed
+                        </button>
+                        {% endif %}
                         <a href="{% url 'conversation' exchange.other_user.id %}" 
                            class="btn btn-primary btn-sm mb-2 w-100">
                             <i class="fas fa-envelope me-1"></i>Message

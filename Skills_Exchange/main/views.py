@@ -456,6 +456,9 @@ def exchanges_view(request):
 
         is_initiator = exchange.user1 == user
 
+        my_completed = exchange.user1_completed if is_initiator else exchange.user2_completed
+        their_completed = exchange.user2_completed if is_initiator else exchange.user1_completed
+        
         exchange_data = {
             "id": exchange.id,
             "other_user": other_user,
@@ -467,6 +470,10 @@ def exchanges_view(request):
             "start_date": exchange.start_date,
             "last_updated": exchange.last_updated,
             "notes": exchange.notes,
+            "my_completed": my_completed,
+            "their_completed": their_completed,
+            "admin_approved": exchange.admin_approved,
+            "completion_status": exchange.completion_status(),
         }
 
         if exchange.status == "pending":
@@ -635,6 +642,55 @@ def reject_exchange(request, exchange_id):
 
     messages.info(request, "Exchange proposal declined.")
     return redirect("dashboard")
+
+
+@login_required
+def mark_exchange_complete(request, exchange_id):
+    """Mark the user's part of an exchange as complete."""
+    exchange = get_object_or_404(
+        Exchange,
+        id=exchange_id,
+        status="active"
+    )
+    
+    user = request.user
+    if user != exchange.user1 and user != exchange.user2:
+        messages.error(request, "You are not part of this exchange.")
+        return redirect("exchanges")
+    
+    is_user1 = user == exchange.user1
+    
+    if is_user1 and not exchange.user1_completed:
+        exchange.user1_completed = True
+        exchange.user1_completed_date = timezone.now()
+        exchange.save()
+        messages.success(
+            request, 
+            "Your part of the exchange is marked as complete! "
+            "Once the other user also marks their part complete, "
+            "an admin will review and approve it."
+        )
+    elif not is_user1 and not exchange.user2_completed:
+        exchange.user2_completed = True
+        exchange.user2_completed_date = timezone.now()
+        exchange.save()
+        messages.success(
+            request,
+            "Your part of the exchange is marked as complete! "
+            "Once the other user also marks their part complete, "
+            "an admin will review and approve it."
+        )
+    else:
+        messages.info(request, "You've already marked this exchange as complete.")
+    
+    if exchange.both_users_completed() and not exchange.admin_approved:
+        messages.info(
+            request,
+            "Both users have completed their parts! "
+            "Waiting for admin approval to finalize this exchange."
+        )
+    
+    return redirect("exchanges")
 
 
 @login_required

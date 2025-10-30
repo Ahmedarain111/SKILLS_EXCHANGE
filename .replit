@@ -34,10 +34,6 @@ outputType = "webview"
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 41877
-externalPort = 3000
-
 [deployment]
 deploymentTarget = "autoscale"
 run = ["bash", "-c", "cd Skills_Exchange && gunicorn --bind=0.0.0.0:5000 --reuse-port Skills_Exchange.wsgi:application"]
