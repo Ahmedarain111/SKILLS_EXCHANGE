@@ -33,6 +33,7 @@ venv/
 env/
 ENV/
 .venv
+.pythonlibs/
 
 # IDE
 .vscode/
