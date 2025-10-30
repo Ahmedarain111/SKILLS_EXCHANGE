@@ -242,7 +242,13 @@
                             <div class="exchange-party">
                                 <h5>{{ exchange.user1.userprofile.full_name }}</h5>
                                 <p class="text-muted mb-0">Provides: <strong>{{ exchange.skill1 }}</strong></p>
-                                
+                                <p class="mb-0 mt-2">
+                                    {% if exchange.user1_completed %}
+                                        <span class="badge bg-success"><i class="fas fa-check"></i> Completed</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark"><i class="fas fa-clock"></i> In Progress</span>
+                                    {% endif %}
+                                </p>
                             </div>
                             <div class="exchange-arrow">
                                 <i class="fas fa-exchange-alt"></i>
@@ -250,7 +256,13 @@
                             <div class="exchange-party">
                                 <h5>{{ exchange.user2.userprofile.full_name }}</h5>
                                 <p class="text-muted mb-0">Provides: <strong>{{ exchange.skill2 }}</strong></p>
-                                
+                                <p class="mb-0 mt-2">
+                                    {% if exchange.user2_completed %}
+                                        <span class="badge bg-success"><i class="fas fa-check"></i> Completed</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark"><i class="fas fa-clock"></i> In Progress</span>
+                                    {% endif %}
+                                </p>
                             </div>
                         </div>
 
@@ -274,7 +286,25 @@
                             {% endif %}
                         </div>
 
-                        <div class="exchange-actions mt-3">
+                        {% if exchange.user1_completed and exchange.user2_completed and not exchange.admin_approved %}
+                        <div class="alert alert-warning mt-3 mb-3">
+                            <i class="fas fa-exclamation-triangle"></i> <strong>Needs Admin Approval:</strong> Both users have completed their parts. This exchange is ready for your review.
+                        </div>
+                        {% elif exchange.admin_approved %}
+                        <div class="alert alert-success mt-3 mb-3">
+                            <i class="fas fa-check-circle"></i> <strong>Admin Approved:</strong> This exchange has been reviewed and approved on {{ exchange.admin_approved_date|date:"M d, Y" }}.
+                        </div>
+                        {% endif %}
+
+                        <div class="exchange-actions mt-3 d-flex gap-2 flex-wrap">
+                            {% if exchange.user1_completed and exchange.user2_completed and not exchange.admin_approved %}
+                            <form method="post" action="{% url 'admin_approve_exchange' exchange.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success" onclick="return confirm('Approve this exchange? This will mark it as officially completed.')">
+                                    <i class="fas fa-check-circle"></i> Approve Exchange
+                                </button>
+                            </form>
+                            {% endif %}
                             <a href="{% url 'profile' exchange.user1.id %}" class="btn btn-sm btn-outline-primary">
                                 <i class="fas fa-user"></i> User 1 Profile
                             </a>

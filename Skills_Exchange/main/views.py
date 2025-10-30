@@ -193,6 +193,35 @@ def admin_exchanges(request):
 
 @staff_member_required
 @require_POST
+def admin_approve_exchange(request, exchange_id):
+    """Admin approves a completed exchange (POST only with CSRF)."""
+    exchange = get_object_or_404(Exchange, id=exchange_id)
+    
+    if not exchange.both_users_completed():
+        messages.error(
+            request,
+            "Cannot approve: Both users must complete their parts first."
+        )
+        return redirect("admin_exchanges")
+    
+    if exchange.admin_approved:
+        messages.info(request, "This exchange has already been approved.")
+        return redirect("admin_exchanges")
+    
+    exchange.admin_approved = True
+    exchange.admin_approved_date = timezone.now()
+    exchange.status = "completed"
+    exchange.save()
+    
+    messages.success(
+        request,
+        f"Exchange between {exchange.user1.username} and {exchange.user2.username} has been approved and marked as completed!"
+    )
+    return redirect("admin_exchanges")
+
+
+@staff_member_required
+@require_POST
 def admin_delete_user(request, user_id):
     """Delete a user (POST only for CSRF protection)"""
     user_to_delete = get_object_or_404(User, id=user_id)
