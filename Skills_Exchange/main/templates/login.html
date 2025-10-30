@@ -11,6 +11,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <style>
+        footer > h3 {
+            color: #4CC9F0;
+        }
+    </style>
 </head>
 
 <body>
@@ -75,24 +80,26 @@
         </div>
     </main>
 
-    <footer class="mt-5">
+    <footer>
         <div class="container">
             <div class="row">
-                <div class="col-md-4 mb-4">
-                    <h3>SkillSwap</h3>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h3 style="color: #4CC9F0;">SkillSwap</h3>
                     <p>Connecting people through skill exchange. No money, just knowledge sharing.</p>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <h3>Quick Links</h3>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h3 style="color: #4CC9F0;">Quick Links</h3>
                     <ul class="footer-links">
-                        <li><a href="{% url 'marketplace' %}">Home</a></li>
-                        <li><a href="#">How It Works</a></li>
-                        <li><a href="#">Browse Skills</a></li>
+                        <li><a href="{% url 'index' %}">Home</a></li>
+                        <li><a href="{% url 'marketplace' %}">Marketplace</a></li>
+                        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
                         <li><a href="#">Success Stories</a></li>
                     </ul>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <h3>Support</h3>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h3 style="color: #4CC9F0;">Support</h3>
                     <ul class="footer-links">
                         <li><a href="#">Help Center</a></li>
                         <li><a href="#">Safety Guidelines</a></li>
@@ -100,7 +107,18 @@
                         <li><a href="#">Contact Us</a></li>
                     </ul>
                 </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h3 style="color: #4CC9F0;">Connect</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Twitter</a></li>
+                        <li><a href="#">Facebook</a></li>
+                        <li><a href="#">Instagram</a></li>
+                    </ul>
+                </div>
             </div>
+
             <div class="copyright text-center">
                 <p>&copy; 2025 SkillSwap. All rights reserved | <a class="secondary-link link-underline-opacity-0" href="{% url "devteam" %}">Developers team</a></p>
             </div>
