@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -512,9 +513,7 @@
                 <p>Meet the talented individuals who brought SkillSwap to life</p>
             </div>
             <div class="team-container">
-                <div class="member-card"><img
-                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80"
-                        alt="Umer Farooque" class="member-image">
+                <div class="member-card"><img src="{% static "umer.jpg" %}" alt="Umer Farooque" class="member-image">
                     <div class="member-content">
                         <div class="member-name">UMER FAROOQUE</div>
                         <div class="member-role">Full Stack Developer</div>
@@ -531,7 +530,7 @@
                     </div>
                 </div>
                 <div class="member-card"><img
-                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80"
+                        src="{% static "ahmed.jpg" %}"
                         alt="Ahmed Raza" class="member-image">
                     <div class="member-content">
                         <div class="member-name">AHMED RAZA</div>
@@ -550,7 +549,7 @@
                     </div>
                 </div>
                 <div class="member-card"><img
-                        src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80"
+                        src="{% static "irfan.jpg" %}""
                         alt="Irfan Ali" class="member-image">
                     <div class="member-content">
                         <div class="member-name">IRFAN ALI</div>
