@@ -102,38 +102,39 @@ def index_view(request):
 
 @login_required
 def marketplace_view(request):
-    # Get all categories for sidebar
     categories = Category.objects.all()
-
-    # Define level choices
     levels = ["Any", "Beginner", "Intermediate", "Advanced", "Expert"]
 
-    # Read selected filters from query (?category=1&level=Beginner)
+    no_unseen_messages = Message.objects.filter(
+        receiver=request.user, is_read=False
+    ).count()
+    no_pending_exchanges = Exchange.objects.filter(
+        user2=request.user, status="pending"
+    ).count()
+
     category_id = request.GET.get("category")
     level = request.GET.get("level")
 
-    # Start with all offered skills (exclude current user) with optimized queries
     offered_skills = (
         UserSkill.objects.filter(role="offer")
         .exclude(user=request.user)
         .select_related("user", "user__userprofile", "skill", "skill__category")
     )
 
-    # Apply category filter if not empty or "All"
     if category_id and category_id.lower() != "all":
         offered_skills = offered_skills.filter(skill__category_id=category_id)
 
-    # Apply skill level filter if not empty or "Any"
     if level and level.lower() != "any":
         offered_skills = offered_skills.filter(proficiency__iexact=level)
 
-    # Prepare context
     context = {
         "categories": categories,
         "skills": offered_skills,
         "levels": levels,
         "selected_category": category_id or "all",
         "selected_level": level or "any",
+        "unseen_messages": no_unseen_messages,
+        "pending_exchanges": no_pending_exchanges,
     }
 
     return render(request, "marketplace.html", context)
@@ -146,6 +147,9 @@ def admin_dashboard(request):
     pending_exchanges = Exchange.objects.filter(status="pending").count()
     completed_exchanges = Exchange.objects.filter(status="completed").count()
     recent_users = User.objects.order_by("-date_joined")[:5]
+    pending_admin_count = Exchange.objects.filter(
+        user1_completed=True, user2_completed=True, admin_approved=False
+    ).count()
 
     context = {
         "total_users": total_users,
@@ -153,12 +157,17 @@ def admin_dashboard(request):
         "pending_issues": pending_exchanges,
         "completed_exchanges": completed_exchanges,
         "recent_users": recent_users,
+        "pending_exchanges": pending_admin_count,
     }
     return render(request, "admin_dashboard.html", context)
 
 
 @staff_member_required
 def admin_users(request):
+    pending_admin_count = Exchange.objects.filter(
+        user1_completed=True, user2_completed=True, admin_approved=False
+    ).count()
+
     query = request.GET.get("q", "")
     if query:
         users = User.objects.filter(
@@ -168,7 +177,11 @@ def admin_users(request):
         ).order_by("-date_joined")
     else:
         users = User.objects.all().order_by("-date_joined")
-    return render(request, "admin_users.html", {"users": users})
+    return render(
+        request,
+        "admin_users.html",
+        {"users": users, "pending_exchanges": pending_admin_count},
+    )
 
 
 @staff_member_required
@@ -187,6 +200,7 @@ def admin_exchanges(request):
     context = {
         "exchanges": exchanges,
         "status_filter": status_filter,
+        "pending_exchanges": pending_admin_count,
     }
     return render(request, "admin_exchanges.html", context)
 
@@ -196,26 +210,25 @@ def admin_exchanges(request):
 def admin_approve_exchange(request, exchange_id):
     """Admin approves a completed exchange (POST only with CSRF)."""
     exchange = get_object_or_404(Exchange, id=exchange_id)
-    
+
     if not exchange.both_users_completed():
         messages.error(
-            request,
-            "Cannot approve: Both users must complete their parts first."
+            request, "Cannot approve: Both users must complete their parts first."
         )
         return redirect("admin_exchanges")
-    
+
     if exchange.admin_approved:
         messages.info(request, "This exchange has already been approved.")
         return redirect("admin_exchanges")
-    
+
     exchange.admin_approved = True
     exchange.admin_approved_date = timezone.now()
     exchange.status = "completed"
     exchange.save()
-    
+
     messages.success(
         request,
-        f"Exchange between {exchange.user1.username} and {exchange.user2.username} has been approved and marked as completed!"
+        f"Exchange between {exchange.user1.username} and {exchange.user2.username} has been approved and marked as completed!",
     )
     return redirect("admin_exchanges")
 
@@ -313,12 +326,18 @@ def create_profile(request):
 @login_required
 def dashboard_view(request):
     user = request.user
+    no_unseen_messages = Message.objects.filter(
+        receiver=request.user, is_read=False
+    ).count()
+    no_pending_exchanges = Exchange.objects.filter(
+        Q(user2=request.user, status="pending") |
+        Q(user2=request.user, user1_completed=True)
+    ).count()
 
     pending_requests = Exchange.objects.filter(
         user2=user, status="pending"
     ).select_related("user1", "user1__userprofile", "skill1", "skill2")
 
-    # Calculate profile completion
     profile_completion = 0
     if hasattr(user, "userprofile"):
         profile = user.userprofile
@@ -448,6 +467,8 @@ def dashboard_view(request):
         "profile_completion": profile_completion,
         "recent_activities": recent_activities,
         "matches": matches,
+        "unseen_messages": no_unseen_messages,
+        "pending_exchanges": no_pending_exchanges,
     }
 
     return render(request, "dashboard.html", context)
@@ -457,6 +478,9 @@ def dashboard_view(request):
 def exchanges_view(request):
     """Display all exchanges for the current user."""
     user = request.user
+    no_unseen_messages = Message.objects.filter(
+        receiver=request.user, is_read=False
+    ).count()
 
     all_exchanges = (
         Exchange.objects.filter(Q(user1=user) | Q(user2=user))
@@ -486,9 +510,13 @@ def exchanges_view(request):
 
         is_initiator = exchange.user1 == user
 
-        my_completed = exchange.user1_completed if is_initiator else exchange.user2_completed
-        their_completed = exchange.user2_completed if is_initiator else exchange.user1_completed
-        
+        my_completed = (
+            exchange.user1_completed if is_initiator else exchange.user2_completed
+        )
+        their_completed = (
+            exchange.user2_completed if is_initiator else exchange.user1_completed
+        )
+
         exchange_data = {
             "id": exchange.id,
             "other_user": other_user,
@@ -521,6 +549,7 @@ def exchanges_view(request):
         "completed_exchanges": completed_exchanges,
         "other_exchanges": other_exchanges,
         "total_count": all_exchanges.count(),
+        "unseen_messages": no_unseen_messages,
     }
 
     return render(request, "exchanges.html", context)
@@ -679,25 +708,22 @@ def reject_exchange(request, exchange_id):
 def mark_exchange_complete(request, exchange_id):
     """Mark the user's part of an exchange as complete (POST only with CSRF)."""
     user = request.user
-    
+
     exchange = get_object_or_404(
-        Exchange,
-        Q(user1=user) | Q(user2=user),
-        id=exchange_id,
-        status="active"
+        Exchange, Q(user1=user) | Q(user2=user), id=exchange_id, status="active"
     )
-    
+
     is_user1 = user == exchange.user1
-    
+
     if is_user1 and not exchange.user1_completed:
         exchange.user1_completed = True
         exchange.user1_completed_date = timezone.now()
         exchange.save()
         messages.success(
-            request, 
+            request,
             "Your part of the exchange is marked as complete! "
             "Once the other user also marks their part complete, "
-            "an admin will review and approve it."
+            "an admin will review and approve it.",
         )
     elif not is_user1 and not exchange.user2_completed:
         exchange.user2_completed = True
@@ -707,28 +733,29 @@ def mark_exchange_complete(request, exchange_id):
             request,
             "Your part of the exchange is marked as complete! "
             "Once the other user also marks their part complete, "
-            "an admin will review and approve it."
+            "an admin will review and approve it.",
         )
     else:
         messages.info(request, "You've already marked this exchange as complete.")
-    
+
     if exchange.both_users_completed() and not exchange.admin_approved:
         messages.info(
             request,
             "Both users have completed their parts! "
-            "Waiting for admin approval to finalize this exchange."
+            "Waiting for admin approval to finalize this exchange.",
         )
-    
+
     return redirect("exchanges")
 
 
 @login_required
 def messages_view(request, user_id=None):
-    """Display list of conversations and optionally a selected conversation."""
-    current_user = request.user
 
-    # --- Build conversation list with optimized queries ---
-    # Get all users the current user has messaged with
+    current_user = request.user
+    no_pending_exchanges = Exchange.objects.filter(
+        user2=request.user, status="pending"
+    ).count()
+
     sent_to_ids = (
         Message.objects.filter(sender=current_user)
         .values_list("receiver_id", flat=True)
@@ -741,26 +768,22 @@ def messages_view(request, user_id=None):
     )
     conversation_user_ids = set(list(sent_to_ids) + list(received_from_ids))
 
-    # Fetch all conversation users with profiles in one query
     conversation_users = User.objects.filter(
         id__in=conversation_user_ids
     ).select_related("userprofile")
     user_map = {user.id: user for user in conversation_users}
 
-    # Fetch all relevant messages for conversations in bulk
     all_messages = Message.objects.filter(
         Q(sender=current_user, receiver_id__in=conversation_user_ids)
         | Q(sender_id__in=conversation_user_ids, receiver=current_user)
     ).select_related("sender", "receiver")
 
-    # Build conversation data
     conversations = []
     for uid in conversation_user_ids:
         other_user = user_map.get(uid)
         if not other_user:
             continue
 
-        # Find last message for this conversation
         user_messages = [
             m
             for m in all_messages
@@ -769,7 +792,6 @@ def messages_view(request, user_id=None):
         ]
         last_message = max(user_messages, key=lambda m: m.timestamp, default=None)
 
-        # Count unread messages
         unread_count = sum(
             1
             for m in user_messages
@@ -784,7 +806,6 @@ def messages_view(request, user_id=None):
             }
         )
 
-    # Sort conversations by last message timestamp
     conversations.sort(
         key=lambda x: (
             x["last_message"].timestamp if x["last_message"] else x["user"].date_joined
@@ -792,7 +813,6 @@ def messages_view(request, user_id=None):
         reverse=True,
     )
 
-    # --- Selected conversation (if any) ---
     selected_user = None
     messages_list = []
     if user_id:
@@ -800,12 +820,10 @@ def messages_view(request, user_id=None):
             User.objects.select_related("userprofile"), id=user_id
         )
 
-        # Mark unread messages as read
         Message.objects.filter(
             sender=selected_user, receiver=current_user, is_read=False
         ).update(is_read=True)
 
-        # Get all messages with this user
         messages_list = (
             Message.objects.filter(
                 Q(sender=current_user, receiver=selected_user)
@@ -815,7 +833,6 @@ def messages_view(request, user_id=None):
             .select_related("sender", "receiver")
         )
 
-        # Handle sending a new message
         if request.method == "POST":
             content = request.POST.get("content", "").strip()
             if content:
@@ -828,6 +845,7 @@ def messages_view(request, user_id=None):
         "conversations": conversations,
         "selected_user": selected_user,
         "messages": messages_list,
+        "pending_exchanges": no_pending_exchanges,
     }
 
     return render(request, "messages.html", context)

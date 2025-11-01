@@ -52,11 +52,22 @@
           {% endif %}
           {% if user.is_authenticated %}
           <li class="nav-item">
-            <a class="nav-link {% if request.resolver_match.url_name == 'exchanges' %}active{% endif %}" href="{% url 'exchanges' %}">My Exchanges</a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'exchanges' %}active{% endif %}" href="{% url 'exchanges' %}">My Exchanges
+              {% if pending_exchanges > 0 %}
+              <span class="badge bg-danger rounded-circle">
+                {{ pending_exchanges }}
+              </span>
+              {% endif %}
+            </a>
           </li>
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'messages' or request.resolver_match.url_name == 'conversation' %}active{% endif %}" href="{% url 'messages' %}">
               Messages
+              {% if unseen_messages > 0 %}
+              <span class="badge bg-danger rounded-circle">
+                {{ unseen_messages }}
+              </span>
+            {% endif %}
             </a>
           </li>
           {% endif %}
