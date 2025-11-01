@@ -263,7 +263,7 @@
         .member-image {
             width: 100%;
             height: 250px;
-            object-fit: cover;
+            object-fit: contain;
             transition: transform 0.5s;
         }
 
@@ -513,7 +513,8 @@
                 <p>Meet the talented individuals who brought SkillSwap to life</p>
             </div>
             <div class="team-container">
-                <div class="member-card"><img src="{% static "umer.jpg" %}" alt="Umer Farooque" class="member-image">
+                <div class="member-card">
+                    <img src="{% static "umer.jpg" %}" alt="Umer Farooque" class="member-image">
                     <div class="member-content">
                         <div class="member-name">UMER FAROOQUE</div>
                         <div class="member-role">Full Stack Developer</div>
